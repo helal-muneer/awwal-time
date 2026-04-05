@@ -3,3 +3,6 @@ data/*.db
 data/*.db-wal
 data/*.db-shm
 .env
+data/
+node_modules/
+.env
