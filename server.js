@@ -15,7 +15,16 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { etag: false, maxAge: 0 }));
+
+// Disable caching for all pages
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  next();
+});
 
 // View engine
 app.set('view engine', 'ejs');
@@ -172,6 +181,14 @@ settings.run('adsense_header', '');
 settings.run('adsense_footer', '');
 settings.run('weekly_question', '');
 settings.run('active_theme', 'red');
+settings.run('show_categories', '0');
+settings.run('show_advanced_submit', '1');
+settings.run('show_separate_regrets', '0');
+settings.run('show_leaderboard', '0');
+settings.run('show_compare', '0');
+settings.run('show_stats_page', '0');
+settings.run('show_weekly_question', '1');
+settings.run('show_related_stories', '0');
 
 // Theme definitions
 const THEMES = {
@@ -189,12 +206,20 @@ app.use((req, res, next) => {
   res.locals.theme = THEMES[themeKey];
   res.locals.themeKey = themeKey;
   res.locals.allThemes = THEMES;
+  res.locals.features = getFeatureSettings();
   next();
 });
 
 function getSetting(key) {
   const row = db.prepare('SELECT value FROM site_settings WHERE key = ?').get(key);
   return row ? row.value : '';
+}
+
+function getFeatureSettings() {
+  const keys = ['show_categories','show_advanced_submit','show_separate_regrets','show_leaderboard','show_compare','show_stats_page','show_weekly_question','show_related_stories'];
+  const f = {};
+  keys.forEach(k => { f[k] = getSetting(k) === '1'; });
+  return f;
 }
 
 // Auth middleware
@@ -416,17 +441,45 @@ app.get('/submit', (req, res) => {
     categories: CATEGORIES
   });
 });
+app.use((req, res, next) => {
+  req.xhr = req.headers['x-requested-with'] === 'XMLHttpRequest';
+  next();
+});
 
-// Handle submission
 app.post('/submit', upload.single('image'), (req, res) => {
   const { name, email, hide_name, category, done1, done2, done3, done4, done5,
-          notdone1, notdone2, notdone3, notdone4, notdone5, comment } = req.body;
+          notdone1, notdone2, notdone3, notdone4, notdone5, comment, simple_mode, simple_text } = req.body;
 
-  const done_regrets = [done1, done2, done3, done4, done5].filter(Boolean).join('|||');
-  const notdone_regrets = [notdone1, notdone2, notdone3, notdone4, notdone5].filter(Boolean).join('|||');
+  let done_regrets, notdone_regrets, finalComment, finalCategory;
+  
+  if (simple_mode === '1' && simple_text) {
+    // Simple mode: put everything in comment
+    done_regrets = '';
+    notdone_regrets = '';
+    finalComment = simple_text;
+    finalCategory = 'شخصي';
+  } else {
+    done_regrets = [done1, done2, done3, done4, done5].filter(Boolean).join('|||');
+    notdone_regrets = [notdone1, notdone2, notdone3, notdone4, notdone5].filter(Boolean).join('|||');
+    finalComment = comment || '';
+    finalCategory = category || 'شخصي';
+  }
 
-  if (!name || (!done_regrets && !notdone_regrets)) {
-    return res.render('submit', { error: 'يرجى ملء الحقول المطلوبة', title: 'شارك تجربتك', categories: CATEGORIES });
+  // Validation
+  if (simple_mode === '1') {
+    if (!name || !simple_text) {
+      if (req.xhr || req.headers.accept === 'application/json') {
+        return res.status(400).json({ error: 'يرجى ملء الحقول المطلوبة' });
+      }
+      return res.render('submit', { error: 'يرجى ملء الحقول المطلوبة', title: 'شارك تجربتك', categories: CATEGORIES });
+    }
+  } else {
+    if (!name || (!done_regrets && !notdone_regrets)) {
+      if (req.xhr || req.headers.accept === 'application/json') {
+        return res.status(400).json({ error: 'يرجى ملء الحقول المطلوبة' });
+      }
+      return res.render('submit', { error: 'يرجى ملء الحقول المطلوبة', title: 'شارك تجربتك', categories: CATEGORIES });
+    }
   }
 
   const image_url = req.file ? 'uploads/' + req.file.filename : null;
@@ -435,7 +488,7 @@ app.post('/submit', upload.single('image'), (req, res) => {
     INSERT INTO stories (name, hide_name, email, done_regrets, notdone_regrets, comment, category, user_id, image_url)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  stmt.run(name, hide_name ? 1 : 0, email || null, done_regrets, notdone_regrets, comment || '', category || 'شخصي', userId, image_url);
+  stmt.run(name, hide_name ? 1 : 0, email || null, done_regrets, notdone_regrets, finalComment, finalCategory, userId, image_url);
 
   if (getSetting('require_approval') !== '1') {
     const lastId = db.prepare('SELECT last_insert_rowid() as id').get().id;
@@ -448,7 +501,12 @@ app.post('/submit', upload.single('image'), (req, res) => {
 
   db.prepare('UPDATE site_stats SET value = value + 1 WHERE key = ?').run('total_submissions');
   const newStoryId = db.prepare('SELECT last_insert_rowid() as id').get().id;
-  fireWebhook('story.created', { id: newStoryId, name, category: category || 'شخصي' });
+  fireWebhook('story.created', { id: newStoryId, name, category: finalCategory });
+  
+  // If AJAX/modal submit, return JSON
+  if (req.xhr || req.headers.accept === 'application/json') {
+    return res.json({ ok: true, id: newStoryId });
+  }
   res.render('submit-success', { title: 'تم الإرسال بنجاح - أول مرّة' });
 });
 
@@ -592,6 +650,7 @@ app.get('/admin/settings', requireSuper, (req, res) => {
     mailPass: getSetting('mail_pass'),
     mailFrom: getSetting('mail_from'),
     weeklyQuestion: getSetting('weekly_question'),
+    features: getFeatureSettings(),
     cacheEntries: cache.stats(),
     title: 'الإعدادات - أول مرّة'
   });
@@ -599,7 +658,9 @@ app.get('/admin/settings', requireSuper, (req, res) => {
 
 app.post('/admin/settings', requireSuper, (req, res) => {
   const { require_approval, adsense_header, adsense_footer, site_name, site_description,
-          email_enabled, mail_host, mail_port, mail_user, mail_pass, mail_from, weekly_question } = req.body;
+          email_enabled, mail_host, mail_port, mail_user, mail_pass, mail_from, weekly_question,
+          show_categories, show_advanced_submit, show_separate_regrets, show_leaderboard,
+          show_compare, show_stats_page, show_weekly_question, show_related_stories } = req.body;
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'require_approval'").run(require_approval === 'on' ? '1' : '0');
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'adsense_header'").run(adsense_header || '');
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'adsense_footer'").run(adsense_footer || '');
@@ -612,6 +673,10 @@ app.post('/admin/settings', requireSuper, (req, res) => {
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'mail_pass'").run(mail_pass || '');
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'mail_from'").run(mail_from || '');
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'weekly_question'").run(weekly_question || '');
+  // Feature toggles
+  ['show_categories','show_advanced_submit','show_separate_regrets','show_leaderboard','show_compare','show_stats_page','show_weekly_question','show_related_stories'].forEach(key => {
+    db.prepare("UPDATE site_settings SET value = ? WHERE key = ?").run(req.body[key] === 'on' ? '1' : '0', key);
+  });
   logWithAudit(req, 'تحديث الإعدادات', 'تم تحديث إعدادات الموقع');
   res.redirect('/admin/settings');
 });

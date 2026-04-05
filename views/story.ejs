@@ -242,7 +242,7 @@
   </div>
 
   <!-- Related Stories -->
-  <% if (related.length > 0) { %>
+  <% if (typeof features !== 'undefined' && features.show_related_stories && related.length > 0) { %>
   <div class="mt-10 fade-up">
     <h2 class="text-lg font-bold mb-4 flex items-center gap-2">📖 تجارب مشابهة</h2>
     <div class="grid md:grid-cols-2 gap-4">

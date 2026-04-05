@@ -263,7 +263,7 @@
     img.lazy-img.loaded { opacity: 1; }
   </style>
 </head>
-<body class="bg-dark-950 text-gray-100 min-h-screen">
+<body class="bg-dark-950 text-gray-100 min-h-screen" data-theme="light">
 
   <!-- Reading Progress Bar -->
   <div id="readingProgress" style="position:fixed;top:0;left:0;height:3px;z-index:9999;background:linear-gradient(90deg,#dc2626,#ef4444,#f87171);width:0%;transition:width 0.1s linear;"></div>
@@ -279,29 +279,16 @@
         <span>أول مرّة</span>
       </a>
       <form action="/" method="GET" class="flex-1 max-w-xs">
-        <input type="text" name="q" value="<%= typeof search !== 'undefined' ? search : '' %>" placeholder="🔍 ابحث عن تجربة..." class="w-full bg-dark-800/60 border border-dark-700/40 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-brand-500/50 transition placeholder-gray-500">
+        <input type="text" name="q" value="<%= typeof search !== 'undefined' ? search : '' %>" placeholder="🔍 ابحث..." class="w-full bg-dark-800/60 border border-dark-700/40 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-brand-500/50 transition placeholder-gray-500">
       </form>
-      <a href="/submit" style="color:#fff !important" class="bg-brand-600 hover:bg-brand-700 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:shadow-lg hover:shadow-brand-600/25 flex-shrink-0">✍️ شارك</a>
-      <button onclick="toggleTheme()" id="themeToggle" class="w-9 h-9 flex items-center justify-center rounded-full bg-dark-800/60 border border-dark-700/40 hover:bg-dark-700/60 transition text-lg" title="تبديل المظهر">🌙</button>
-      <div class="flex items-center gap-1 flex-shrink-0">
-        <a href="/leaderboard" class="text-gray-400 hover:text-gray-200 px-2 py-1 text-sm transition" title="المتصدرين">🏆</a>
-        <a href="/best" class="text-gray-400 hover:text-gray-200 px-2 py-1 text-sm transition" title="الأفضل">⭐</a>
-        <a href="/my-stats" class="text-gray-400 hover:text-gray-200 px-2 py-1 text-sm transition" title="إحصائياتي">📊</a>
-      </div>
       <a href="/favorites" class="text-gray-400 hover:text-gray-200 px-3 py-2.5 rounded-full text-sm font-bold transition flex-shrink-0" title="المفضلة" id="favNavLink">❤️</a>
-      <button onclick="toggleReadingMode()" id="readingModeBtn" class="w-9 h-9 flex items-center justify-center rounded-full bg-dark-800/60 border border-dark-700/40 hover:bg-dark-700/60 transition text-lg opacity-60" title="وضع القراءة المريحة">📖</button>
-      <!-- Theme Picker -->
-      <div class="relative flex-shrink-0">
-        <button onclick="document.getElementById('themePicker').classList.toggle('hidden')" class="w-9 h-9 flex items-center justify-center rounded-full bg-dark-800/60 border border-dark-700/40 hover:bg-dark-700/60 transition text-lg" title="تغيير السمة">🎨</button>
-        <div id="themePicker" class="hidden absolute left-0 top-12 bg-dark-800 border border-dark-700 rounded-2xl p-3 shadow-2xl z-50 min-w-[160px]">
-          <div class="text-xs text-gray-500 mb-2 px-1">اختر السمة</div>
-          <div id="themeOptions"></div>
-          <button onclick="setTheme('')" class="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-dark-700/60 transition text-sm text-gray-400 mt-1">
-            <span class="w-5 h-5 rounded-full flex-shrink-0 border-2 border-dark-600 bg-gradient-to-br from-red-500 via-blue-500 to-green-500"></span>
-            <span>تلقائي</span>
-          </button>
-        </div>
-      </div>
+      <button onclick="toggleTheme()" id="themeToggle" class="w-9 h-9 flex items-center justify-center rounded-full bg-dark-800/60 border border-dark-700/40 hover:bg-dark-700/60 transition text-lg" title="تبديل المظهر">🌙</button>
+      <% if (typeof features !== 'undefined' && features.show_leaderboard) { %>
+      <a href="/leaderboard" class="text-gray-400 hover:text-gray-200 px-2 py-1 text-sm transition" title="المتصدرين">🏆</a>
+      <% } %>
+      <% if (typeof features !== 'undefined' && features.show_stats_page) { %>
+      <a href="/my-stats" class="text-gray-400 hover:text-gray-200 px-2 py-1 text-sm transition" title="إحصائياتي">📊</a>
+      <% } %>
     </div>
   </nav>
 
@@ -334,19 +321,6 @@
       <div class="flex justify-center gap-6 mb-4">
         <a href="/privacy" class="hover:text-gray-400 transition">سياسة الخصوصية</a>
         <a href="/contact" class="hover:text-gray-400 transition">تواصل معنا</a>
-        <a href="/leaderboard" class="hover:text-gray-400 transition">🏆 المتصدرين</a>
-        <a href="/best" class="hover:text-gray-400 transition">⭐ الأفضل</a>
-        <a href="/my-stats" class="hover:text-gray-400 transition">📊 إحصائياتي</a>
-      </div>
-      <div class="flex justify-center flex-wrap gap-3 mb-4">
-        <a href="/category/علاقات" class="text-xs text-gray-500 hover:text-gray-300 transition">❤️ علاقات</a>
-        <a href="/category/دراسة" class="text-xs text-gray-500 hover:text-gray-300 transition">📚 دراسة</a>
-        <a href="/category/عمل" class="text-xs text-gray-500 hover:text-gray-300 transition">💼 عمل</a>
-        <a href="/category/صحة" class="text-xs text-gray-500 hover:text-gray-300 transition">🏥 صحة</a>
-        <a href="/category/سفر" class="text-xs text-gray-500 hover:text-gray-300 transition">✈️ سفر</a>
-        <a href="/category/مال" class="text-xs text-gray-500 hover:text-gray-300 transition">💰 مال</a>
-        <a href="/category/عائلة" class="text-xs text-gray-500 hover:text-gray-300 transition">👨‍👩‍👧‍👦 عائلة</a>
-        <a href="/category/شخصي" class="text-xs text-gray-500 hover:text-gray-300 transition">🌟 شخصي</a>
       </div>
       <p>© 2026 أول مرّة — كل التجارب حقيقية من ناس مثلك ❤️</p>
     </div>
@@ -358,11 +332,6 @@
       <div class="text-center"><%- adsenseFooter %></div>
     <% } %>
   </div>
-
-  <!-- Floating CTA -->
-  <a href="/submit" id="floatingCta" style="color:#fff !important" class="floating-cta bg-brand-600 hover:bg-brand-700 px-6 py-3 rounded-full font-bold text-sm transition-all hidden">
-    ✍️ شارك تجربتك
-  </a>
 
   <script>
     // Toast system
@@ -396,13 +365,6 @@
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
     }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
     document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
-
-    // Floating CTA
-    const cta = document.getElementById('floatingCta');
-    if (cta) {
-      window.addEventListener('scroll', () => { cta.classList.toggle('hidden', window.scrollY < 400); });
-      setTimeout(() => cta.classList.remove('hidden'), 100);
-    }
 
     // Reactions
     document.querySelectorAll('.react-btn').forEach(btn => {
@@ -495,15 +457,16 @@
       const html = document.documentElement;
       const isLight = html.getAttribute('data-theme') === 'light';
       html.setAttribute('data-theme', isLight ? 'dark' : 'light');
+      document.body.setAttribute('data-theme', isLight ? 'dark' : 'light');
       localStorage.setItem('theme', isLight ? 'dark' : 'light');
       document.getElementById('themeToggle').textContent = isLight ? '🌙' : '☀️';
     }
     (function() {
-      const saved = localStorage.getItem('theme');
-      if (saved === 'light') {
-        document.documentElement.setAttribute('data-theme', 'light');
-        document.getElementById('themeToggle').textContent = '☀️';
-      }
+      const saved = localStorage.getItem('theme') || 'light';
+      const isLight = saved === 'light';
+      document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+      document.body.setAttribute('data-theme', isLight ? 'light' : 'dark');
+      document.getElementById('themeToggle').textContent = isLight ? '☀️' : '🌙';
     })();
 
     // Service Worker registration

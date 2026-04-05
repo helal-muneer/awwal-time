@@ -41,6 +41,70 @@
     </label>
   </div>
 
+  <!-- Feature Toggles -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-4">🎛️ تحكم بالميزات</h3>
+    <p class="text-sm text-gray-500 mb-4">تحكم بالميزات الظاهرة للمستخدمين. إيقاف الميزة يخفيها بدون حذفها.</p>
+    <div class="space-y-4">
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="show_categories" <%= features.show_categories ? 'checked' : '' %> class="w-5 h-5 accent-orange-600">
+        <div>
+          <div class="font-bold">عرض التصنيفات</div>
+          <div class="text-sm text-gray-500">عرض فلاتر التصنيفات في الصفحة الرئيسية</div>
+        </div>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="show_advanced_submit" <%= features.show_advanced_submit ? 'checked' : '' %> class="w-5 h-5 accent-orange-600">
+        <div>
+          <div class="font-bold">خيارات إضافية في النشر</div>
+          <div class="text-sm text-gray-500">عرض زر "خيارات إضافية" في نموذج النشر البسيط</div>
+        </div>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="show_separate_regrets" <%= features.show_separate_regrets ? 'checked' : '' %> class="w-5 h-5 accent-orange-600">
+        <div>
+          <div class="font-bold">عرض الندم بشكل منفصل</div>
+          <div class="text-sm text-gray-500">عرض "ندم عليها" و"تمنيت لو فعلتها" بشكل منفصل في البطاقات</div>
+        </div>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="show_leaderboard" <%= features.show_leaderboard ? 'checked' : '' %> class="w-5 h-5 accent-orange-600">
+        <div>
+          <div class="font-bold">لوحة المتصدرين</div>
+          <div class="text-sm text-gray-500">عرض رابط المتصدرين في شريط التنقل</div>
+        </div>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="show_compare" <%= features.show_compare ? 'checked' : '' %> class="w-5 h-5 accent-orange-600">
+        <div>
+          <div class="font-bold">ميزة المقارنة</div>
+          <div class="text-sm text-gray-500">عرض ميزة مقارنة التجارب</div>
+        </div>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="show_stats_page" <%= features.show_stats_page ? 'checked' : '' %> class="w-5 h-5 accent-orange-600">
+        <div>
+          <div class="font-bold">صفحة الإحصائيات</div>
+          <div class="text-sm text-gray-500">عرض صفحة إحصائيات الموقع</div>
+        </div>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="show_weekly_question" <%= features.show_weekly_question ? 'checked' : '' %> class="w-5 h-5 accent-orange-600">
+        <div>
+          <div class="font-bold">سؤال الأسبوع</div>
+          <div class="text-sm text-gray-500">عرض سؤال الأسبوع في الصفحة الرئيسية</div>
+        </div>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="show_related_stories" <%= features.show_related_stories ? 'checked' : '' %> class="w-5 h-5 accent-orange-600">
+        <div>
+          <div class="font-bold">تجارب مشابهة</div>
+          <div class="text-sm text-gray-500">عرض "تجارب مشابهة" في صفحة التفاصيل</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
   <!-- Weekly Question -->
   <div class="bg-white rounded-xl p-5 shadow-sm border">
     <h3 class="font-bold mb-4">💡 سؤال الأسبوع</h3>
