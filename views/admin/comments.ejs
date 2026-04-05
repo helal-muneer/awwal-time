@@ -1,0 +1,84 @@
+<div class="max-w-4xl">
+  <h1 class="text-2xl font-bold mb-6">💬 إدارة التعليقات</h1>
+
+  <% if (comments.length === 0) { %>
+    <div class="bg-white rounded-xl p-8 text-center text-gray-500">
+      <div class="text-4xl mb-3">💬</div>
+      <p>لا توجد تعليقات بعد</p>
+    </div>
+  <% } else { %>
+    <div class="space-y-4">
+      <% comments.forEach(function(c) { %>
+        <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+          <!-- Parent Comment -->
+          <div class="p-4">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="font-semibold"><%= c.name %></span>
+                  <% if (c.is_admin) { %>
+                    <span class="px-2 py-0.5 rounded-full text-xs bg-orange-100 text-orange-700">🦞 أدمن</span>
+                  <% } %>
+                  <span class="text-xs text-gray-400"><%= c.email || '' %></span>
+                </div>
+                <p class="text-sm text-gray-700 mb-2"><%= c.comment %></p>
+                <div class="flex items-center gap-3 text-xs text-gray-500">
+                  <span>تجربة <%= c.story_name ? c.story_name : '#' + c.story_id %></span>
+                  <span>•</span>
+                  <span><%= new Date(c.created_at).toLocaleString('ar-SA') %></span>
+                  <span class="px-2 py-0.5 rounded-full text-xs <%= c.approved ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' %>">
+                    <%= c.approved ? 'منشور' : 'مخفي' %>
+                  </span>
+                </div>
+              </div>
+              <div class="flex gap-1 mr-3">
+                <form method="POST" action="/admin/comment/<%= c.id %>/toggle" class="inline">
+                  <button class="px-2 py-1 rounded text-xs <%= c.approved ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200' %> transition">
+                    <%= c.approved ? 'إخفاء' : 'نشر' %>
+                  </button>
+                </form>
+                <form method="POST" action="/admin/comment/<%= c.id %>/delete" class="inline" onsubmit="return confirm('هل أنت متأكد؟')">
+                  <button class="px-2 py-1 rounded text-xs bg-red-100 text-red-700 hover:bg-red-200 transition">حذف</button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Admin Quick Reply Form -->
+            <form method="POST" action="/admin/comment/<%= c.id %>/reply" class="mt-3 flex gap-2">
+              <input type="text" name="comment" placeholder="اكتب ردك هنا..." required
+                class="flex-1 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none">
+              <button type="submit" class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600 transition whitespace-nowrap">
+                🦞 رد
+              </button>
+            </form>
+          </div>
+
+          <!-- Nested Replies -->
+          <% if (c.replies && c.replies.length > 0) { %>
+            <div class="border-t bg-gray-50">
+              <% c.replies.forEach(function(r) { %>
+                <div class="p-3 pr-8 border-b last:border-b-0">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="font-semibold text-sm"><%= r.name %></span>
+                        <% if (r.is_admin) { %>
+                          <span class="px-2 py-0.5 rounded-full text-xs bg-orange-100 text-orange-700">🦞 أدمن</span>
+                        <% } %>
+                      </div>
+                      <p class="text-sm text-gray-600"><%= r.comment %></p>
+                      <span class="text-xs text-gray-400"><%= new Date(r.created_at).toLocaleString('ar-SA') %></span>
+                    </div>
+                    <form method="POST" action="/admin/comment/<%= r.id %>/delete" class="inline" onsubmit="return confirm('هل أنت متأكد؟')">
+                      <button class="px-2 py-1 rounded text-xs bg-red-100 text-red-700 hover:bg-red-200 transition">حذف</button>
+                    </form>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</div>

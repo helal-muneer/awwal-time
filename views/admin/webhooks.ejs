@@ -1,0 +1,98 @@
+<div class="mb-6">
+  <h1 class="text-2xl font-bold mb-2">🔗 الويب هوكس</h1>
+  <p class="text-gray-500 text-sm">إدارة webhook لاستقبال أحداث الموقع</p>
+</div>
+
+<!-- Add webhook form -->
+<div class="bg-white rounded-xl p-6 mb-6 shadow-sm">
+  <h2 class="font-bold mb-4">إضافة ويب هوك جديد</h2>
+  <form action="/admin/webhooks/add" method="POST" class="space-y-4">
+    <div>
+      <label class="block text-sm font-medium mb-1">رابط الويب هوك *</label>
+      <input type="url" name="url" required placeholder="https://example.com/webhook" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">الأحداث (مفصولة بفاصلة)</label>
+      <input type="text" name="events" value="story.created,story.approved,comment.added" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500" dir="ltr">
+      <p class="text-xs text-gray-400 mt-1">الخيارات: story.created, story.approved, comment.added أو * للكل</p>
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">المفتاح السري (اختياري)</label>
+      <input type="text" name="secret" placeholder="secret_key" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500" dir="ltr">
+    </div>
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition">➕ إضافة</button>
+  </form>
+</div>
+
+<!-- Webhooks list -->
+<div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+  <div class="p-4 border-b border-gray-100">
+    <h2 class="font-bold">الويب هوكس المسجلة (<%= webhooks.length %>)</h2>
+  </div>
+  <% if (webhooks.length === 0) { %>
+    <div class="p-8 text-center text-gray-400">
+      <div class="text-4xl mb-2">🔗</div>
+      <p>لا توجد ويب هوكس مسجلة</p>
+    </div>
+  <% } else { %>
+    <div class="divide-y divide-gray-50">
+      <% webhooks.forEach(function(wh) { %>
+        <div class="p-4 flex items-center gap-4">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <code class="text-sm bg-gray-100 px-2 py-0.5 rounded truncate max-w-md" dir="ltr"><%= wh.url %></code>
+              <span class="text-xs px-2 py-0.5 rounded-full <%= wh.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' %>">
+                <%= wh.active ? '✅ نشط' : '⏸ معطّل' %>
+              </span>
+            </div>
+            <div class="text-xs text-gray-400" dir="ltr">
+              الأحداث: <%= wh.events %>
+              <% if (wh.secret) { %> · 🔑 محمي<% } %>
+            </div>
+          </div>
+          <div class="flex gap-2 flex-shrink-0">
+            <form method="POST" action="/admin/webhooks/<%= wh.id %>/toggle">
+              <button type="submit" class="text-xs px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 transition">
+                <%= wh.active ? '⏸ تعطيل' : '▶️ تفعيل' %>
+              </button>
+            </form>
+            <form method="POST" action="/admin/webhooks/<%= wh.id %>/delete" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
+              <button type="submit" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition">🗑 حذف</button>
+            </form>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</div>
+
+<!-- Delivery log -->
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+  <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+    <h2 class="font-bold">سجل الإرسال (<%= deliveries.length %>)</h2>
+    <% if (deliveries.length > 0) { %>
+      <form method="POST" action="/admin/webhooks/deliveries/clear">
+        <button type="submit" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition" onclick="return confirm('مسح جميع السجلات؟')">🗑 مسح السجلات</button>
+      </form>
+    <% } %>
+  </div>
+  <% if (deliveries.length === 0) { %>
+    <div class="p-8 text-center text-gray-400">
+      <p>لا توجد سجلات إرسال بعد</p>
+    </div>
+  <% } else { %>
+    <div class="divide-y divide-gray-50">
+      <% deliveries.slice(0, 30).forEach(function(d) { %>
+        <div class="p-3 flex items-center gap-3 text-sm">
+          <span class="text-lg"><%= d.success ? '✅' : '❌' %></span>
+          <div class="flex-1 min-w-0">
+            <span class="font-medium"><%= d.event %></span>
+            <span class="text-gray-400 text-xs mr-2">→ <%= d.webhook_url %></span>
+          </div>
+          <span class="text-xs px-2 py-0.5 rounded <%= d.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' %>"><%= d.status_code || 'خطأ' %></span>
+          <span class="text-xs text-gray-400 whitespace-nowrap"><%= new Date(d.created_at).toLocaleString('ar-SA') %></span>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</div>

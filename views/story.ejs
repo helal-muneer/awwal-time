@@ -1,0 +1,399 @@
+<%
+  var doneItems = (story.done_regrets || '').split('|||').filter(Boolean);
+  var notDoneItems = (story.notdone_regrets || '').split('|||').filter(Boolean);
+  var shareUrl = 'https://awwal-time.ksawats.com/story/' + story.id;
+  var shareText = encodeURIComponent('اقرأ تجربة ' + (story.hide_name ? 'مجهول' : story.name) + ' على أول مرّة');
+  var reactions = {};
+  try { db.prepare('SELECT type, count FROM reactions WHERE story_id = ?').all(story.id).forEach(function(r){reactions[r.type]=r.count;}); } catch(e){}
+%>
+
+<!-- JSON-LD -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "تجربة <%= story.hide_name ? 'مجهول' : story.name %> - أول مرّة",
+  "datePublished": "<%= story.created_at %>",
+  "author": { "@type": "Person", "name": "<%= story.hide_name ? 'مجهول' : story.name %>" },
+  "publisher": { "@type": "Organization", "name": "أول مرّة" },
+  "description": "اقرأ تجربة <%= story.hide_name ? 'مجهول' : story.name %> على أول مرّة",
+  "mainEntityOfPage": "<%= shareUrl %>"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "الرئيسية", "item": "https://awwal-time.ksawats.com/" },
+    <% if (story.category && story.category !== 'شخصي') { %>
+    { "@type": "ListItem", "position": 2, "name": "<%= story.category %>", "item": "https://awwal-time.ksawats.com/?category=<%= encodeURIComponent(story.category) %>" },
+    { "@type": "ListItem", "position": 3, "name": "تجربة <%= story.hide_name ? 'مجهول' : story.name %>" }
+    <% } else { %>
+    { "@type": "ListItem", "position": 2, "name": "تجربة <%= story.hide_name ? 'مجهول' : story.name %>" }
+    <% } %>
+  ]
+}
+</script>
+
+<div class="max-w-2xl mx-auto fade-up">
+  <!-- Breadcrumb -->
+  <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+    <a href="/" class="hover:text-gray-300 transition">الرئيسية</a>
+    <span>/</span>
+    <% if (story.category && story.category !== 'شخصي') { %>
+      <a href="/?category=<%= encodeURIComponent(story.category) %>" class="hover:text-gray-300 transition"><%= story.category %></a>
+      <span>/</span>
+    <% } %>
+    <span class="text-gray-400 truncate max-w-[200px]">تجربة <%= story.hide_name ? 'مجهول' : story.name %></span>
+  </nav>
+
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <div class="inline-flex items-center gap-2 bg-dark-800/60 border border-dark-700/40 rounded-full px-4 py-1.5 text-xs text-gray-400 mb-4">
+      <span>📅 <%= new Date(story.created_at).toLocaleDateString('ar-SA', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) %></span>
+      <% if (story.category) { %>
+        <span>•</span>
+        <a href="/?category=<%= encodeURIComponent(story.category) %>" class="text-brand-400 hover:text-brand-300"><%= story.category %></a>
+      <% } %>
+      <span>•</span>
+      <span>⏱ <%= readingTime %> دقائق قراءة</span>
+    </div>
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <div class="w-14 h-14 bg-dark-800/60 border border-dark-700/40 rounded-full flex items-center justify-center text-3xl">
+        <%= story.hide_name ? '👤' : '😊' %>
+      </div>
+      <button onclick="toggleFavorite(<%= story.id %>)" class="fav-btn w-14 h-14 bg-dark-800/60 border border-dark-700/40 rounded-full flex items-center justify-center text-3xl hover:border-brand-500/50 transition" data-id="<%= story.id %>" title="إضافة للمفضلة">🤍</button>
+    </div>
+    <h1 class="text-2xl md:text-3xl font-bold">تجربة <%= story.hide_name ? 'مجهول' : story.name %></h1>
+    <div class="flex justify-center gap-4 mt-3 text-sm text-gray-500">
+      <span>👁 <%= story.views %></span>
+      <span>🔗 <%= story.shares %></span>
+      <span>💬 <%= comments.length %> تعليق</span>
+    </div>
+  </div>
+
+  <!-- Reactions Bar -->
+  <div class="flex justify-center gap-3 mb-8">
+    <button class="react-btn flex flex-col items-center gap-1 bg-dark-800/40 border border-dark-700/30 rounded-xl px-5 py-3 hover:bg-dark-700/40 transition <%= reactions.relatable ? 'active border-green-800/40 bg-green-900/10' : 'opacity-50' %>"
+      data-story="<%= story.id %>" data-type="relatable">
+      <span class="text-2xl">🫂</span>
+      <span class="text-xs text-gray-400">أشعر بنفس الشي</span>
+      <span class="react-count text-sm font-bold"><%= reactions.relatable || 0 %></span>
+    </button>
+    <button class="react-btn flex flex-col items-center gap-1 bg-dark-800/40 border border-dark-700/30 rounded-xl px-5 py-3 hover:bg-dark-700/40 transition <%= reactions.sympathy ? 'active border-red-800/40 bg-red-900/10' : 'opacity-50' %>"
+      data-story="<%= story.id %>" data-type="sympathy">
+      <span class="text-2xl">❤️</span>
+      <span class="text-xs text-gray-400">أتمنى لك الخير</span>
+      <span class="react-count text-sm font-bold"><%= reactions.sympathy || 0 %></span>
+    </button>
+    <button class="react-btn flex flex-col items-center gap-1 bg-dark-800/40 border border-dark-700/30 rounded-xl px-5 py-3 hover:bg-dark-700/40 transition <%= reactions.motivated ? 'active border-yellow-800/40 bg-yellow-900/10' : 'opacity-50' %>"
+      data-story="<%= story.id %>" data-type="motivated">
+      <span class="text-2xl">💪</span>
+      <span class="text-xs text-gray-400">ألهمتني</span>
+      <span class="react-count text-sm font-bold"><%= reactions.motivated || 0 %></span>
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="bg-dark-800/40 border border-dark-700/30 rounded-2xl p-6 md:p-8 space-y-8">
+    <% if (story.image_url) { %>
+    <div class="rounded-xl overflow-hidden mb-4">
+      <img src="/<%= story.image_url %>" alt="صورة التجربة" class="w-full max-h-96 object-cover lazy-img" loading="lazy" onload="this.classList.add('loaded')">
+    </div>
+    <% } %>
+    <% if (doneItems.length) { %>
+    <div>
+      <h2 class="text-lg font-bold text-brand-400 mb-4 flex items-center gap-2">😔 أشياء ندم عليها</h2>
+      <div class="space-y-3">
+        <% doneItems.forEach(function(item, i) { %>
+        <div class="bg-brand-900/15 border border-brand-800/20 rounded-xl p-4 flex items-start gap-3">
+          <span class="bg-brand-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"><%= i+1 %></span>
+          <p class="text-gray-200 pt-0.5"><%= item %></p>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (notDoneItems.length) { %>
+    <div>
+      <h2 class="text-lg font-bold text-yellow-400 mb-4 flex items-center gap-2">✨ أشياء تمنيت لو فعلتها</h2>
+      <div class="space-y-3">
+        <% notDoneItems.forEach(function(item, i) { %>
+        <div class="bg-yellow-900/10 border border-yellow-800/15 rounded-xl p-4 flex items-start gap-3">
+          <span class="bg-yellow-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"><%= i+1 %></span>
+          <p class="text-gray-200 pt-0.5"><%= item %></p>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (story.comment) { %>
+    <div class="border-t border-dark-700/30 pt-6">
+      <h3 class="text-sm font-bold text-gray-400 mb-3">💬 رسالة إضافية</h3>
+      <p class="text-gray-300 bg-dark-700/30 rounded-xl p-4 leading-relaxed"><%= story.comment %></p>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Report -->
+  <div class="text-center mt-4">
+    <button onclick="document.getElementById('reportModal').classList.toggle('hidden')" class="text-xs text-gray-600 hover:text-gray-400 transition">⚠️ الإبلاغ عن هذه التجربة</button>
+  </div>
+  <div id="reportModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+    <div class="bg-dark-800 border border-dark-700 rounded-2xl p-6 max-w-sm w-full">
+      <h3 class="font-bold mb-4">⚠️ الإبلاغ عن تجربة</h3>
+      <select id="reportReason" class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 mb-4 text-sm">
+        <option value="محتوى غير لائق">محتوى غير لائق</option>
+        <option value="إساءة">إساءة</option>
+        <option value="محتوى مضلل">محتوى مضلل</option>
+        <option value="أخرى">أخرى</option>
+      </select>
+      <div class="flex gap-3">
+        <button onclick="fetch('/story/<%= story.id %>/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason:document.getElementById('reportReason').value})}).then(()=>{showToast('تم إرسال البلاغ','info');document.getElementById('reportModal').classList.add('hidden')})" class="flex-1 bg-brand-600 hover:bg-brand-700 py-2.5 rounded-xl font-bold text-sm transition">إرسال البلاغ</button>
+        <button onclick="document.getElementById('reportModal').classList.add('hidden')" class="flex-1 bg-dark-700 hover:bg-dark-600 py-2.5 rounded-xl font-bold text-sm transition">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share -->
+  <div class="mt-8 bg-dark-800/30 border border-dark-700/20 rounded-2xl p-6 text-center">
+    <p class="text-sm text-gray-400 mb-4">هل أثّرت فيك هذه التجربة؟ شاركها مع الآخرين</p>
+    <div class="flex justify-center gap-3 flex-wrap">
+      <a href="https://twitter.com/intent/tweet?text=<%= shareText %>&url=<%= encodeURIComponent(shareUrl) %>" target="_blank" class="bg-[#0f1419] hover:bg-[#1a1f25] border border-[#2f3336] px-5 py-2.5 rounded-full text-sm font-bold transition flex items-center gap-2">𝕏 تويتر</a>
+      <a href="https://wa.me/?text=<%= encodeURIComponent('اقرأ هذه التجربة على أول مرّة\n' + shareUrl) %>" target="_blank" class="bg-green-600 hover:bg-green-700 px-5 py-2.5 rounded-full text-sm font-bold transition flex items-center gap-2">💬 واتساب</a>
+      <button onclick="navigator.clipboard.writeText(window.location.href);showToast('تم نسخ الرابط!','success')" class="bg-dark-700 hover:bg-dark-600 border border-dark-600/50 px-5 py-2.5 rounded-full text-sm transition flex items-center gap-2">🔗 نسخ الرابط</button>
+      <button onclick="shareNative()" class="bg-purple-600 hover:bg-purple-700 px-5 py-2.5 rounded-full text-sm font-bold transition flex items-center gap-2">📤 مشاركة</button>
+      <a href="/story/<%= story.id %>/share-card" target="_blank" class="bg-pink-600 hover:bg-pink-700 px-5 py-2.5 rounded-full text-sm font-bold transition flex items-center gap-2">📸 شارك كصورة</a>
+    </div>
+  </div>
+
+  <!-- Comments Section -->
+  <div class="mt-8 bg-dark-800/30 border border-dark-700/20 rounded-2xl p-6">
+    <h2 class="text-lg font-bold mb-6 flex items-center gap-2">💬 التعليقات (<%= comments.length %>)</h2>
+
+    <!-- Comment Form -->
+    <form id="commentForm" class="mb-6 space-y-3">
+      <div class="flex gap-3">
+        <input type="text" id="commentName" placeholder="اسمك *" required class="flex-1 bg-dark-700 border border-dark-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 transition">
+        <input type="email" id="commentEmail" placeholder="إيميلك (اختياري)" class="flex-1 bg-dark-700 border border-dark-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 transition">
+      </div>
+      <textarea id="commentText" rows="3" placeholder="اكتب تعليقك..." required class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
+      <input type="hidden" id="commentParentId" value="">
+      <div class="flex gap-3">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 px-6 py-2.5 rounded-xl font-bold text-sm transition">إرسال التعليق</button>
+        <button type="button" id="cancelReply" onclick="cancelReplyForm()" class="hidden bg-dark-700 hover:bg-dark-600 px-4 py-2.5 rounded-xl text-sm transition">✕ إلغاء الرد</button>
+      </div>
+    </form>
+
+    <!-- Comments List -->
+    <div id="commentsList" class="space-y-4">
+      <% if (comments.length === 0) { %>
+        <p class="text-center text-gray-500 text-sm py-4">لا توجد تعليقات بعد. كن أول من يعلق!</p>
+      <% } %>
+      <% comments.forEach(function(c) { %>
+        <div class="bg-dark-700/30 rounded-xl p-4 border border-dark-600/20" id="comment-<%= c.id %>">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-8 h-8 bg-dark-600 rounded-full flex items-center justify-center text-sm">👤</div>
+            <div class="flex-1">
+              <span class="font-semibold text-sm"><%= c.name %></span>
+              <span class="text-xs text-gray-500 mr-2"><%= new Date(c.created_at).toLocaleDateString('ar-SA') %></span>
+            </div>
+            <!-- Vote buttons -->
+            <div class="flex items-center gap-1">
+              <button onclick="voteComment(<%= c.id %>, 'up', this)" class="vote-btn text-xs px-2 py-1 rounded-lg hover:bg-dark-600/50 transition flex items-center gap-1" title="إعجاب">
+                👍 <span class="vote-count"><%= c.voteTotal > 0 ? '+' + c.voteTotal : c.voteTotal %></span>
+              </button>
+              <button onclick="voteComment(<%= c.id %>, 'down', this)" class="vote-btn text-xs px-2 py-1 rounded-lg hover:bg-dark-600/50 transition" title="عدم إعجاب">👎</button>
+              <button onclick="openReportModal('comment', <%= c.id %>)" class="text-xs px-1 py-1 text-gray-600 hover:text-gray-400 transition" title="إبلاغ">⚠️</button>
+            </div>
+          </div>
+          <p class="text-gray-300 text-sm mb-2"><%= c.comment %></p>
+          <button onclick="startReply(<%= c.id %>, '<%= c.name.replace(/'/g, "\\'") %>')" class="text-xs text-brand-400 hover:text-brand-300 transition">↩️ رد</button>
+
+          <% if (c.replies && c.replies.length > 0) { %>
+          <div class="mt-3 mr-6 space-y-3 border-r-2 border-dark-600/30 pr-3">
+            <% c.replies.forEach(function(r) { %>
+            <div class="bg-dark-700/20 rounded-lg p-3 border border-dark-600/10" id="comment-<%= r.id %>">
+              <div class="flex items-center gap-2 mb-1">
+                <div class="w-6 h-6 bg-dark-600 rounded-full flex items-center justify-center text-xs">👤</div>
+                <div class="flex-1">
+                  <span class="font-semibold text-xs"><%= r.name %></span>
+                  <span class="text-xs text-gray-500 mr-1"><%= new Date(r.created_at).toLocaleDateString('ar-SA') %></span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button onclick="voteComment(<%= r.id %>, 'up', this)" class="vote-btn text-xs px-1.5 py-0.5 rounded hover:bg-dark-600/50 transition" title="إعجاب">
+                    👍 <span class="vote-count"><%= r.voteTotal > 0 ? '+' + r.voteTotal : r.voteTotal %></span>
+                  </button>
+                  <button onclick="voteComment(<%= r.id %>, 'down', this)" class="vote-btn text-xs px-1.5 py-0.5 rounded hover:bg-dark-600/50 transition" title="عدم إعجاب">👎</button>
+                  <button onclick="openReportModal('comment', <%= r.id %>)" class="text-xs px-1 py-0.5 text-gray-600 hover:text-gray-400 transition" title="إبلاغ">⚠️</button>
+                </div>
+              </div>
+              <p class="text-gray-300 text-xs"><%= r.comment %></p>
+            </div>
+            <% }); %>
+          </div>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+
+  <!-- Related Stories -->
+  <% if (related.length > 0) { %>
+  <div class="mt-10 fade-up">
+    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">📖 تجارب مشابهة</h2>
+    <div class="grid md:grid-cols-2 gap-4">
+      <% related.forEach(function(s) { %>
+        <%
+          var rDone = (s.done_regrets || '').split('|||').filter(Boolean);
+          var rNotDone = (s.notdone_regrets || '').split('|||').filter(Boolean);
+        %>
+        <a href="/story/<%= s.id %>" class="story-card bg-dark-800/40 border border-dark-700/30 rounded-xl p-4 block">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-8 h-8 bg-dark-700/60 rounded-full flex items-center justify-center text-sm"><%= s.hide_name ? '👤' : '😊' %></div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-sm truncate"><%= s.hide_name ? 'مجهول' : s.name %></div>
+              <div class="text-xs text-gray-500"><%= new Date(s.created_at).toLocaleDateString('ar-SA') %></div>
+            </div>
+          </div>
+          <% if (rDone.length) { %>
+            <div class="flex flex-wrap gap-1 mb-1"><% rDone.slice(0,2).forEach(function(d){ %><span class="regret-tag bg-brand-900/25 text-brand-300 border border-brand-800/20 text-xs"><%= d %></span><% }); %></div>
+          <% } %>
+          <div class="text-xs text-gray-500 mt-2">👁 <%= s.views %> · 💬 <%= s.comment_count || 0 %></div>
+        </a>
+      <% }); %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Random Next -->
+  <div class="mt-8 text-center">
+    <a href="/random" class="inline-flex items-center gap-2 bg-gradient-to-l from-purple-600 to-brand-600 hover:from-purple-700 hover:to-brand-700 px-8 py-3 rounded-full font-bold transition-all hover:shadow-lg hover:shadow-purple-600/25" style="color:#fff !important">🎲 تجربة عشوائية</a>
+  </div>
+
+  <!-- CTA -->
+  <div class="mt-8 text-center">
+    <p class="text-gray-500 text-sm mb-3">عندك تجربة مشابهة؟</p>
+    <a href="/submit" class="bg-brand-600 hover:bg-brand-700 px-8 py-3 rounded-full font-bold transition-all hover:shadow-lg hover:shadow-brand-600/25 inline-flex items-center gap-2" style="color:#fff !important">✍️ شارك تجربتك</a>
+  </div>
+</div>
+
+<!-- Report Modal for comments -->
+<div id="commentReportModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-dark-800 border border-dark-700 rounded-2xl p-6 max-w-sm w-full">
+    <h3 class="font-bold mb-4">⚠️ الإبلاغ عن تعليق</h3>
+    <input type="hidden" id="reportCommentId">
+    <select id="commentReportReason" class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 mb-4 text-sm">
+      <option value="محتوى غير لائق">محتوى غير لائق</option>
+      <option value="إساءة">إساءة</option>
+      <option value="محتوى مضلل">محتوى مضلل</option>
+      <option value="أخرى">أخرى</option>
+    </select>
+    <div class="flex gap-3">
+      <button onclick="submitCommentReport()" class="flex-1 bg-brand-600 hover:bg-brand-700 py-2.5 rounded-xl font-bold text-sm transition">إرسال البلاغ</button>
+      <button onclick="document.getElementById('commentReportModal').classList.add('hidden')" class="flex-1 bg-dark-700 hover:bg-dark-600 py-2.5 rounded-xl font-bold text-sm transition">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Favorites
+function getFavorites() {
+  try { return JSON.parse(localStorage.getItem('awwal_favorites') || '[]'); } catch { return []; }
+}
+function isFavorite(id) { return getFavorites().includes(Number(id)); }
+function toggleFavorite(id) {
+  let favs = getFavorites();
+  id = Number(id);
+  if (favs.includes(id)) { favs = favs.filter(f => f !== id); showToast('تم الإزالة من المفضلة', 'info'); }
+  else { favs.push(id); showToast('تم الإضافة للمفضلة ❤️', 'success'); }
+  localStorage.setItem('awwal_favorites', JSON.stringify(favs));
+  updateFavButtons();
+}
+function updateFavButtons() {
+  document.querySelectorAll('.fav-btn').forEach(btn => {
+    btn.textContent = isFavorite(btn.dataset.id) ? '❤️' : '🤍';
+  });
+}
+updateFavButtons();
+
+// Voting
+function voteComment(id, type, btn) {
+  const container = btn.closest('.bg-dark-700\\/30') || btn.closest('.bg-dark-700\\/20') || btn.parentElement;
+  fetch('/comment/' + id + '/vote', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({type})
+  }).then(r => r.json()).then(data => {
+    if (data.ok) {
+      // Reload vote count
+      location.reload();
+    }
+  });
+}
+
+// Reply system
+function startReply(commentId, name) {
+  document.getElementById('commentParentId').value = commentId;
+  document.getElementById('commentText').placeholder = 'الرد على ' + name + '...';
+  document.getElementById('commentForm').scrollIntoView({behavior: 'smooth'});
+  document.getElementById('cancelReply').classList.remove('hidden');
+  document.getElementById('commentText').focus();
+}
+function cancelReplyForm() {
+  document.getElementById('commentParentId').value = '';
+  document.getElementById('commentText').placeholder = 'اكتب تعليقك...';
+  document.getElementById('cancelReply').classList.add('hidden');
+}
+
+// Comment report
+function openReportModal(type, id) {
+  document.getElementById('reportCommentId').value = id;
+  document.getElementById('commentReportModal').classList.remove('hidden');
+}
+function submitCommentReport() {
+  const id = document.getElementById('reportCommentId').value;
+  const reason = document.getElementById('commentReportReason').value;
+  fetch('/comment/' + id + '/report', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({reason, story_id: <%= story.id %>})
+  }).then(() => {
+    showToast('تم إرسال البلاغ', 'info');
+    document.getElementById('commentReportModal').classList.add('hidden');
+  });
+}
+
+// Native share
+function shareNative() {
+  if (navigator.share) {
+    navigator.share({ title: 'تجربة <%= story.hide_name ? "مجهول" : story.name %> - أول مرّة', url: window.location.href });
+  } else {
+    navigator.clipboard.writeText(window.location.href);
+    showToast('تم نسخ الرابط!', 'success');
+  }
+}
+
+// Comment form
+document.getElementById('commentForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const name = document.getElementById('commentName').value.trim();
+  const email = document.getElementById('commentEmail').value.trim();
+  const text = document.getElementById('commentText').value.trim();
+  const parentId = document.getElementById('commentParentId').value;
+  if (!name || !text) { showToast('الاسم والتعليق مطلوبان', 'error'); return; }
+
+  fetch('/story/<%= story.id %>/comment', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({name, email, comment: text, parent_id: parentId || null})
+  }).then(r => r.json()).then(data => {
+    if (data.ok) {
+      showToast('تم إرسال تعليقك!', 'success');
+      location.reload();
+    } else {
+      showToast(data.error || 'حدث خطأ', 'error');
+    }
+  });
+});
+</script>

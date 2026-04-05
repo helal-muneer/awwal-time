@@ -1,0 +1,53 @@
+<h2 class="text-2xl font-bold mb-6">✏️ تعديل تجربة #<%= story.id %></h2>
+
+<form method="POST" class="max-w-2xl space-y-5">
+  <div class="bg-white rounded-xl p-5 shadow-sm border space-y-4">
+    <div>
+      <label class="block text-sm font-bold mb-1">الاسم</label>
+      <input type="text" name="name" value="<%= story.name %>" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="flex-1">
+        <label class="block text-sm font-bold mb-1">الإيميل</label>
+        <input type="email" name="email" value="<%= story.email || '' %>" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500" dir="ltr">
+      </div>
+      <label class="flex items-center gap-2 mt-6 cursor-pointer">
+        <input type="checkbox" name="hide_name" <%= story.hide_name ? 'checked' : '' %> class="w-4 h-4 accent-orange-600">
+        <span class="text-sm">إخفاء الاسم</span>
+      </label>
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold mb-1">😔 أشياء ندم عليها (واحد في كل سطر)</label>
+      <textarea name="done_regrets" rows="4" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"><%= doneItems.join('\n') %></textarea>
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold mb-1">✨ أشياء تمنى لو فعلها (واحد في كل سطر)</label>
+      <textarea name="notdone_regrets" rows="4" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"><%= notDoneItems.join('\n') %></textarea>
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold mb-1">💬 تعليق</label>
+      <textarea name="comment" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"><%= story.comment || '' %></textarea>
+    </div>
+
+    <label class="flex items-center gap-2 cursor-pointer">
+      <input type="checkbox" name="approved" <%= story.approved ? 'checked' : '' %> class="w-4 h-4 accent-orange-600">
+      <span class="text-sm font-bold">منشورة</span>
+    </label>
+  </div>
+
+  <div class="flex gap-3">
+    <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-full font-bold transition">💾 حفظ التعديلات</button>
+    <a href="/admin" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-full font-bold transition">← العودة</a>
+  </div>
+</form>
+
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+  // Convert line-separated items to ||| format
+  this.done_regrets.value = this.done_regrets.value.split('\n').map(s => s.trim()).filter(Boolean).join('|||');
+  this.notdone_regrets.value = this.notdone_regrets.value.split('\n').map(s => s.trim()).filter(Boolean).join('|||');
+});
+</script>

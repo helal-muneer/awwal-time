@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="32" fill="#0f172a"/>
+  <rect width="192" height="6" fill="#dc2626"/>
+  <text x="96" y="110" text-anchor="middle" font-family="Arial,sans-serif" font-size="48" font-weight="bold" fill="#f87171">أول مرّة</text>
+  <text x="96" y="150" text-anchor="middle" font-family="Arial,sans-serif" font-size="24" fill="#94a3b8">🔄</text>
+</svg>

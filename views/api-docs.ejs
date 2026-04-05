@@ -1,0 +1,61 @@
+<div class="fade-up max-w-3xl mx-auto">
+  <h1 class="text-3xl font-bold mb-2">📘 توثيق API</h1>
+  <p class="text-gray-400 mb-8">واجهة برمجة التطبيقات لأول مرّة — جميع النقاط تدعم CORS و JSON</p>
+
+  <div class="space-y-6">
+
+    <div class="bg-dark-800/50 border border-dark-700/30 rounded-xl p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="bg-green-600/20 text-green-400 text-xs font-bold px-2 py-1 rounded">GET</span>
+        <code class="font-mono text-sm text-gray-200" dir="ltr">/api/stories</code>
+      </div>
+      <p class="text-sm text-gray-400 mb-3">قائمة التجارب المنشورة مع ترقيم الصفحات</p>
+      <h4 class="text-xs font-bold text-gray-500 mb-1">المعاملات:</h4>
+      <div class="text-sm text-gray-300 space-y-1 mb-3">
+        <div><code dir="ltr" class="text-brand-400">page</code> — رقم الصفحة (افتراضي: 1)</div>
+        <div><code dir="ltr" class="text-brand-400">per_page</code> — عدد النتائج (1-20، افتراضي: 10)</div>
+        <div><code dir="ltr" class="text-brand-400">category</code> — تصفية بالتصنيف</div>
+      </div>
+      <h4 class="text-xs font-bold text-gray-500 mb-1">مثال:</h4>
+      <pre class="bg-dark-900/60 border border-dark-700/30 text-green-400 p-3 rounded-lg text-xs" dir="ltr">GET /api/stories?page=1&per_page=5&category=علاقات</pre>
+    </div>
+
+    <div class="bg-dark-800/50 border border-dark-700/30 rounded-xl p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="bg-green-600/20 text-green-400 text-xs font-bold px-2 py-1 rounded">GET</span>
+        <code class="font-mono text-sm text-gray-200" dir="ltr">/api/stories/:id</code>
+      </div>
+      <p class="text-sm text-gray-400 mb-3">تفاصيل تجربة واحدة مع التعليقات والتفاعلات</p>
+      <pre class="bg-dark-900/60 border border-dark-700/30 text-green-400 p-3 rounded-lg text-xs" dir="ltr">GET /api/stories/1</pre>
+    </div>
+
+    <div class="bg-dark-800/50 border border-dark-700/30 rounded-xl p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="bg-green-600/20 text-green-400 text-xs font-bold px-2 py-1 rounded">GET</span>
+        <code class="font-mono text-sm text-gray-200" dir="ltr">/api/categories</code>
+      </div>
+      <p class="text-sm text-gray-400 mb-3">قائمة التصنيفات مع عدد التجارب في كل منها</p>
+      <pre class="bg-dark-900/60 border border-dark-700/30 text-green-400 p-3 rounded-lg text-xs" dir="ltr">GET /api/categories</pre>
+    </div>
+
+    <div class="bg-dark-800/50 border border-dark-700/30 rounded-xl p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="bg-green-600/20 text-green-400 text-xs font-bold px-2 py-1 rounded">GET</span>
+        <code class="font-mono text-sm text-gray-200" dir="ltr">/api/search?q=...</code>
+      </div>
+      <p class="text-sm text-gray-400 mb-3">البحث في التجارب</p>
+      <pre class="bg-dark-900/60 border border-dark-700/30 text-green-400 p-3 rounded-lg text-xs" dir="ltr">GET /api/search?q=سفر</pre>
+    </div>
+
+    <div class="bg-yellow-900/20 border border-yellow-800/30 rounded-xl p-4">
+      <h4 class="font-bold text-yellow-400 mb-2">⚠️ حدود الاستخدام</h4>
+      <p class="text-sm text-yellow-300/80">100 طلب لكل IP في الدقيقة. عند تجاوز الحد يُرجع <code class="text-yellow-300">429 Too Many Requests</code>.</p>
+    </div>
+
+    <div class="bg-blue-900/20 border border-blue-800/30 rounded-xl p-4">
+      <h4 class="font-bold text-blue-400 mb-2">🔗 CORS</h4>
+      <p class="text-sm text-blue-300/80">جميع نقاط API تدعم <code class="text-blue-300">Access-Control-Allow-Origin: *</code> للاستخدام من أي موقع.</p>
+    </div>
+
+  </div>
+</div>

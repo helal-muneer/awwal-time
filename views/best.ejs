@@ -1,0 +1,49 @@
+<div class="fade-up">
+  <div class="text-center mb-8">
+    <div class="text-5xl mb-3">⭐</div>
+    <h1 class="text-3xl font-bold mb-2">أفضل التجارب</h1>
+    <p class="text-gray-400">تجارب مميزة انتقاها فريق أول مرّة</p>
+  </div>
+
+  <% if (stories.length === 0) { %>
+    <div class="text-center py-16 text-gray-500">
+      <div class="text-5xl mb-4">✨</div>
+      <p>لا توجد تجارب مميزة بعد</p>
+    </div>
+  <% } else { %>
+    <div class="space-y-4">
+      <% stories.forEach(s => {
+        const doneItems = (s.done_regrets || '').split('|||').filter(Boolean);
+        const notDoneItems = (s.notdone_regrets || '').split('|||').filter(Boolean);
+      %>
+        <a href="/story/<%= s.id %>" class="block bg-gradient-to-l from-amber-900/20 to-dark-900 border border-amber-700/30 rounded-2xl p-6 hover:border-amber-500/50 transition-all story-card relative">
+          <div class="absolute top-3 left-3 text-xl">📌</div>
+          <div class="flex items-center gap-3 mb-3">
+            <span class="font-bold text-lg"><%= s.hide_name ? '👤 مجهول' : s.name %></span>
+            <span class="text-xs bg-amber-900/40 text-amber-300 px-2 py-0.5 rounded-full border border-amber-700/30">⭐ مميزة</span>
+          </div>
+          <div class="text-xs text-gray-500 mb-3">
+            <%= new Date(s.created_at).toLocaleDateString('ar-SA') %> · 👁 <%= s.views %>
+          </div>
+          <% if (doneItems.length) { %>
+            <div class="flex flex-wrap gap-1 mb-1">
+              <% doneItems.slice(0,3).forEach(d => { %><span class="regret-tag bg-red-900/40 text-red-300 border border-red-800/30">😔 <%= d %></span><% }) %>
+            </div>
+          <% } %>
+          <% if (notDoneItems.length) { %>
+            <div class="flex flex-wrap gap-1">
+              <% notDoneItems.slice(0,3).forEach(d => { %><span class="regret-tag bg-amber-900/40 text-amber-300 border border-amber-800/30">✨ <%= d %></span><% }) %>
+            </div>
+          <% } %>
+          <% if (Object.values(s.reactions).some(v => v > 0)) { %>
+            <div class="flex gap-2 mt-3 text-xs text-gray-500">
+              <% if (s.reactions.relatable) { %><span>🫂 <%= s.reactions.relatable %></span><% } %>
+              <% if (s.reactions.sympathy) { %><span>💗 <%= s.reactions.sympathy %></span><% } %>
+              <% if (s.reactions.motivated) { %><span>💪 <%= s.reactions.motivated %></span><% } %>
+            </div>
+          <% } %>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+</div>

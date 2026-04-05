@@ -1,0 +1,72 @@
+<div class="fade-up">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "الرئيسية", "item": "https://awwal-time.ksawats.com/" },
+      { "@type": "ListItem", "position": 2, "name": "<%= cat.name %>", "item": "https://awwal-time.ksawats.com/category/<%= encodeURIComponent(cat.name) %>" }
+    ]
+  }
+  </script>
+
+  <div class="text-center mb-8">
+    <div class="text-5xl mb-3"><%= cat.icon %></div>
+    <h1 class="text-3xl font-bold mb-2"><%= cat.name %></h1>
+    <p class="text-gray-400"><%= totalCount %> تجربة في هذا التصنيف</p>
+  </div>
+
+  <% if (stories.length === 0) { %>
+    <div class="text-center py-16 text-gray-500">
+      <div class="text-5xl mb-4">📭</div>
+      <p>لا توجد تجارب في هذا التصنيف بعد</p>
+      <a href="/submit" style="color:#fff !important" class="inline-block mt-4 bg-brand-600 hover:bg-brand-700 px-6 py-3 rounded-full text-sm font-bold transition">✍️ كن أول من يشارك</a>
+    </div>
+  <% } else { %>
+    <div class="space-y-4">
+      <% stories.forEach(s => {
+        const doneItems = (s.done_regrets || '').split('|||').filter(Boolean);
+        const notDoneItems = (s.notdone_regrets || '').split('|||').filter(Boolean);
+      %>
+        <a href="/story/<%= s.id %>" class="block bg-dark-900 border border-dark-800 rounded-2xl p-5 hover:border-brand-500/30 transition-all story-card">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="font-bold"><%= s.hide_name ? '👤 مجهول' : s.name %></span>
+            <span class="text-xs text-gray-500">· <%= new Date(s.created_at).toLocaleDateString('ar-SA') %></span>
+            <span class="text-xs text-gray-500 mr-auto">👁 <%= s.views %></span>
+          </div>
+          <% if (doneItems.length) { %>
+            <div class="flex flex-wrap gap-1 mb-1">
+              <% doneItems.slice(0,3).forEach(d => { %><span class="regret-tag bg-red-900/40 text-red-300 border border-red-800/30">😔 <%= d %></span><% }) %>
+              <% if (doneItems.length > 3) { %><span class="text-xs text-gray-500">+<%= doneItems.length - 3 %></span><% } %>
+            </div>
+          <% } %>
+          <% if (notDoneItems.length) { %>
+            <div class="flex flex-wrap gap-1">
+              <% notDoneItems.slice(0,3).forEach(d => { %><span class="regret-tag bg-amber-900/40 text-amber-300 border border-amber-800/30">✨ <%= d %></span><% }) %>
+              <% if (notDoneItems.length > 3) { %><span class="text-xs text-gray-500">+<%= notDoneItems.length - 3 %></span><% } %>
+            </div>
+          <% } %>
+          <% if (Object.values(s.reactions).some(v => v > 0)) { %>
+            <div class="flex gap-2 mt-3 text-xs text-gray-500">
+              <% if (s.reactions.relatable) { %><span>🫂 <%= s.reactions.relatable %></span><% } %>
+              <% if (s.reactions.sympathy) { %><span>💗 <%= s.reactions.sympathy %></span><% } %>
+              <% if (s.reactions.motivated) { %><span>💪 <%= s.reactions.motivated %></span><% } %>
+            </div>
+          <% } %>
+        </a>
+      <% }) %>
+    </div>
+
+    <% if (totalPages > 1) { %>
+      <div class="flex justify-center gap-2 mt-8">
+        <% if (currentPage > 1) { %>
+          <a href="/category/<%= encodeURIComponent(cat.name) %>?page=<%= currentPage - 1 %>" class="bg-dark-800 hover:bg-dark-700 px-4 py-2 rounded-full text-sm transition">→ السابق</a>
+        <% } %>
+        <span class="bg-dark-800 px-4 py-2 rounded-full text-sm text-gray-400"><%= currentPage %> / <%= totalPages %></span>
+        <% if (currentPage < totalPages) { %>
+          <a href="/category/<%= encodeURIComponent(cat.name) %>?page=<%= currentPage + 1 %>" class="bg-dark-800 hover:bg-dark-700 px-4 py-2 rounded-full text-sm transition">التالي ←</a>
+        <% } %>
+      </div>
+    <% } %>
+  <% } %>
+</div>

@@ -1,0 +1,31 @@
+<div class="flex items-center justify-between mb-4">
+  <h2 class="text-2xl font-bold">📋 سجل النشاط</h2>
+  <form action="/admin/activity/clear" method="POST" onsubmit="return confirm('مسح السجل بالكامل؟')">
+    <button class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-full transition">🗑 مسح السجل</button>
+  </form>
+</div>
+
+<% if (logs.length === 0) { %>
+  <div class="text-center py-16 text-gray-400 bg-white rounded-xl border">
+    <div class="text-5xl mb-4">📋</div>
+    <p>لا يوجد سجل نشاط بعد</p>
+  </div>
+<% } else { %>
+  <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+    <div class="divide-y">
+      <% logs.forEach(log => { %>
+        <div class="px-4 py-3 flex items-center gap-3 hover:bg-gray-50">
+          <div class="text-xs text-gray-400 w-36 flex-shrink-0">
+            <%= new Date(log.created_at).toLocaleString('ar-SA') %>
+          </div>
+          <div class="flex-1">
+            <span class="text-sm font-medium"><%= log.action %></span>
+            <% if (log.details) { %>
+              <span class="text-xs text-gray-500"> — <%= log.details %></span>
+            <% } %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+<% } %>

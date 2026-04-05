@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['IBM Plex Sans Arabic', 'sans-serif'] } } } }
+  </script>
+  <style>
+    * { font-family: 'IBM Plex Sans Arabic', sans-serif; }
+    .nav-item { transition: all 0.2s; display: flex; align-items: center; }
+    .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); }
+    .nav-item.active { border-right: 3px solid #f97316; }
+    button, input[type="button"], input[type="submit"] { display: inline-flex; align-items: center; justify-content: center; }
+    span[class*="rounded-full"][class*="bg-"] { display: inline-flex; align-items: center; justify-content: center; }
+    a[class*="rounded-full"][class*="bg-"] { display: inline-flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen flex">
+  <!-- Sidebar -->
+  <aside class="w-56 bg-gray-900 text-white flex-shrink-0 flex flex-col h-screen fixed right-0 top-0 overflow-y-auto">
+    <div class="p-4 border-b border-gray-700 flex-shrink-0">
+      <a href="/admin" class="flex items-center gap-2 font-bold text-lg">
+        <span>🦞</span>
+        <span>أول مرّة</span>
+      </a>
+      <div class="text-xs text-gray-400 mt-1">لوحة التحكم</div>
+    </div>
+    <nav class="flex-1 py-2">
+      <a href="/admin" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('لوحة التحكم') && !title.includes('الإعدادات') ? 'active' : '' %>">
+        <span>📊</span> الرئيسية
+      </a>
+      <a href="/best" target="_blank" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400">
+        <span>⭐</span> التجارب المميزة
+      </a>
+      <a href="/admin/stats" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('الإحصائيات') ? 'active' : '' %>">
+        <span>📈</span> الإحصائيات
+      </a>
+      <a href="/admin/emails" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('الإيميلات') ? 'active' : '' %>">
+        <span>📧</span> الإيميلات
+      </a>
+      <a href="/admin/export" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('تصدير') ? 'active' : '' %>">
+        <span>📦</span> تصدير البيانات
+      </a>
+      <a href="/admin/export/pdf" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400">
+        <span>📄</span> تصدير PDF
+      </a>
+      <a href="/admin/comments" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('التعليقات') ? 'active' : '' %>">
+        <span>💬</span> التعليقات
+      </a>
+      <a href="/admin/messages" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('الرسائل') ? 'active' : '' %>">
+        <span>📬</span> الرسائل
+      </a>
+      <a href="/admin/notifications" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('الإشعارات') ? 'active' : '' %>">
+        <span>🔔</span> الإشعارات
+      </a>
+      <a href="/admin/backup-list" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('النسخ الاحتياطية') ? 'active' : '' %>">
+        <span>💾</span> النسخ الاحتياطية
+      </a>
+      <a href="/admin/reports" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('البلاغات') ? 'active' : '' %>">
+        <span>🚨</span> البلاغات
+      </a>
+      <a href="/admin/webhooks" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('الويب هوكس') ? 'active' : '' %>">
+        <span>🔗</span> الويب هوكس
+      </a>
+      <div class="border-t border-gray-700 my-2"></div>
+      <a href="/admin/themes" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('السمات') ? 'active' : '' %>">
+        <span>🎨</span> السمات
+      </a>
+      <a href="/admin/settings" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('الإعدادات') ? 'active' : '' %>">
+        <span>⚙️</span> الإعدادات
+      </a>
+      <a href="/admin/account" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('الحساب') ? 'active' : '' %>">
+        <span>👤</span> الحساب
+      </a>
+      <a href="/admin/activity" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('النشاط') ? 'active' : '' %>">
+        <span>📋</span> سجل النشاط
+      </a>
+      <a href="/admin/audit-log" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm <%= title.includes('المراجعة') ? 'active' : '' %>">
+        <span>🔒</span> سجل المراجعة
+      </a>
+      <div class="border-t border-gray-700 my-2"></div>
+      <a href="/" target="_blank" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400">
+        <span>🌐</span> الموقع
+      </a>
+      <a href="/admin/logout" class="nav-item flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300">
+        <span>🚪</span> خروج
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 mr-56 p-6">
+    <%- body %>
+  </main>
+</body>
+</html>

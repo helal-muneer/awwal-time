@@ -1,0 +1,40 @@
+<div class="fade-up">
+  <div class="text-center mb-8">
+    <div class="text-5xl mb-3">🏆</div>
+    <h1 class="text-3xl font-bold mb-2">المتصدرين</h1>
+    <p class="text-gray-400">أكثر 10 تجارب تفاعلاً على الموقع</p>
+  </div>
+
+  <% if (rows.length === 0) { %>
+    <div class="text-center py-16 text-gray-500">
+      <div class="text-5xl mb-4">📭</div>
+      <p>لا توجد تجارب بعد</p>
+    </div>
+  <% } else { %>
+    <div class="space-y-3">
+      <% rows.forEach((r, i) => { %>
+        <a href="/story/<%= r.id %>" class="block bg-dark-900 border border-dark-800 rounded-2xl p-5 hover:border-brand-500/30 transition-all story-card">
+          <div class="flex items-center gap-4">
+            <div class="text-3xl w-12 text-center flex-shrink-0">
+              <%= i < 3 ? badges[i] : `<span class="text-lg text-gray-500 font-bold">${i+1}</span>` %>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-bold truncate"><%= r.hide_name ? '👤 مجهول' : r.name %></span>
+                <span class="text-xs bg-dark-800 px-2 py-0.5 rounded-full text-gray-400"><%= r.category %></span>
+              </div>
+              <p class="text-sm text-gray-400">
+                👁 <%= r.views %> · ❤️ <%= r.total_reacts %> · 💬 <%= r.comment_count %>
+              </p>
+            </div>
+            <div class="text-left flex-shrink-0">
+              <div class="text-2xl font-bold <%= i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : i === 2 ? 'text-amber-600' : 'text-gray-500' %>"><%= r.score.toLocaleString() %></div>
+              <div class="text-xs text-gray-500">نقطة</div>
+            </div>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+    <p class="text-center text-xs text-gray-600 mt-6">النتيجة = مشاهدات×1 + تفاعلات×5 + تعليقات×3</p>
+  <% } %>
+</div>

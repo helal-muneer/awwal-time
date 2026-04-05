@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <meta name="description" content="<%= typeof description !== 'undefined' ? description : title %>">
+  <meta property="og:title" content="<%= title %>">
+  <meta property="og:description" content="<%= typeof description !== 'undefined' ? description : title %>">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ar_SA">
+  <% if (typeof canonical !== 'undefined') { %><link rel="canonical" href="<%= canonical %>"><% } %>
+  <link rel="alternate" type="application/rss+xml" title="أول مرّة" href="/rss">
+  <% if (typeof ogImage !== 'undefined') { %><meta property="og:image" content="<%= ogImage %>"><% } %>
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#dc2626">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="أول مرّة">
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg">
+  <!-- SEO -->
+  <link rel="alternate" hreflang="ar" href="<%= typeof canonical !== 'undefined' ? canonical : 'https://awwal-time.ksawats.com' %>">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "أول مرّة",
+    "url": "https://awwal-time.ksawats.com",
+    "logo": "https://awwal-time.ksawats.com/icons/icon-512.svg",
+    "description": "شارك تجربتك - أشياء ندمت عليها وأشياء تمنيت لو فعلتها"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "أول مرّة",
+    "url": "https://awwal-time.ksawats.com",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://awwal-time.ksawats.com/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['IBM Plex Sans Arabic', 'sans-serif'] },
+          colors: {
+            brand: { 50:'#fef3f2', 100:'#fee2e1', 200:'#fecaca', 300:'#fca5a5', 400:'#f87171', 500:'#ef4444', 600:'#dc2626', 700:'#b91c1c', 800:'#991b1b', 900:'#7f1d1d' },
+            dark: { 50:'#f8fafc', 100:'#f1f5f9', 200:'#e2e8f0', 300:'#cbd5e1', 400:'#94a3b8', 500:'#64748b', 600:'#475569', 700:'#334155', 800:'#1e293b', 900:'#0f172a', 950:'#020617' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --primary: <%= typeof theme !== 'undefined' ? theme.primary : '#dc2626' %>;
+      --primary-hover: <%= typeof theme !== 'undefined' ? theme.hover : '#b91c1c' %>;
+      --primary-light: <%= typeof theme !== 'undefined' ? theme.light : '#f87171' %>;
+      --primary-glow: <%= typeof theme !== 'undefined' ? theme.glow : 'rgba(220,38,38,0.25)' %>;
+      --primary-accent: <%= typeof theme !== 'undefined' ? theme.accent : '#fca5a5' %>;
+    }
+    .bg-brand-600 { background-color: var(--primary) !important; }
+    .bg-brand-700 { background-color: var(--primary-hover) !important; }
+    .bg-brand-800 { background-color: var(--primary-hover) !important; }
+    .bg-brand-900 { background-color: color-mix(in srgb, var(--primary-hover) 80%, black) !important; }
+    .hover\:bg-brand-700:hover { background-color: var(--primary-hover) !important; }
+    .hover\:bg-brand-600:hover { background-color: var(--primary) !important; }
+    .text-brand-300 { color: var(--primary-accent) !important; }
+    .text-brand-400 { color: var(--primary-light) !important; }
+    .text-brand-500 { color: var(--primary) !important; }
+    .text-brand-600 { color: var(--primary) !important; }
+    .text-brand-700 { color: var(--primary-hover) !important; }
+    .text-brand-800 { color: color-mix(in srgb, var(--primary-hover) 80%, black) !important; }
+    .border-brand-500 { border-color: var(--primary) !important; }
+    .border-brand-500\/50 { border-color: color-mix(in srgb, var(--primary) 50%, transparent) !important; }
+    .border-brand-600 { border-color: var(--primary) !important; }
+    .shadow-brand-600\/25 { box-shadow: 0 10px 15px -3px var(--primary-glow) !important; }
+    .ring-brand-500\/50 { --tw-ring-color: color-mix(in srgb, var(--primary) 50%, transparent) !important; }
+    .bg-brand-900\/40, .bg-brand-900\/30, .bg-brand-900\/25, .bg-brand-900\/20 { background: color-mix(in srgb, var(--primary) 15%, transparent) !important; }
+    .bg-brand-900\/15 { background: color-mix(in srgb, var(--primary) 10%, transparent) !important; }
+    .bg-brand-900\/10 { background: color-mix(in srgb, var(--primary) 7%, transparent) !important; }
+    .border-brand-800\/30, .border-brand-800\/20 { border-color: color-mix(in srgb, var(--primary) 20%, transparent) !important; }
+    .bg-brand-500\/10 { background: color-mix(in srgb, var(--primary) 10%, transparent) !important; }
+    .bg-brand-500\/20 { background: color-mix(in srgb, var(--primary) 20%, transparent) !important; }
+    .from-brand-600 { --tw-gradient-from: var(--primary) !important; }
+    .to-brand-800 { --tw-gradient-to: var(--primary-hover) !important; }
+    .hero-title {
+      background: linear-gradient(135deg, var(--primary-light), #fbbf24, var(--primary-light)) !important;
+    }
+    #readingProgress { background: linear-gradient(90deg, var(--primary), var(--primary-accent), var(--primary-light)) !important; }
+    .floating-cta { box-shadow: 0 8px 32px var(--primary-glow) !important; }
+    .floating-cta:hover { box-shadow: 0 12px 40px var(--primary-glow) !important; }
+    .story-card:hover { border-color: color-mix(in srgb, var(--primary) 30%, transparent) !important; }
+
+    [data-theme="light"] .text-brand-300,
+    [data-theme="light"] .text-brand-400 { color: var(--primary) !important; }
+
+    * { font-family: 'IBM Plex Sans Arabic', sans-serif; }
+    body { line-height: 1.7; }
+    h1, h2, h3, h4, h5, h6 { line-height: 1.4; }
+    .regret-tag { display: inline-flex; align-items: center; padding: 4px 14px; border-radius: 9999px; font-size: 0.8rem; margin: 3px; }
+
+    .fade-up { opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+    .stagger-1 { transition-delay: 0.1s; }
+    .stagger-2 { transition-delay: 0.2s; }
+    .stagger-3 { transition-delay: 0.3s; }
+
+    .story-card { transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+
+    .floating-cta {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 40; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .floating-cta.hidden { transform: translateX(-50%) translateY(100px); opacity: 0; pointer-events: none; }
+
+    .react-btn { transition: all 0.2s ease; }
+    .react-btn:hover { transform: scale(1.15); }
+    .react-btn.active { transform: scale(1.2); }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    .hero-title {
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 4s ease-in-out infinite;
+    }
+    @keyframes shimmer { 0%,100%{background-position:0% center} 50%{background-position:200% center} }
+
+    .stat-pulse { animation: pulse-glow 2s ease-in-out infinite; }
+    @keyframes pulse-glow { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+    /* Toast notifications */
+    .toast-container { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast {
+      pointer-events: auto;
+      padding: 12px 24px; border-radius: 12px; font-size: 0.875rem; font-weight: 600;
+      backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);
+      animation: toast-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      max-width: 400px; text-align: center;
+    }
+    .toast.out { animation: toast-out 0.3s ease forwards; }
+    .toast.success { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); color: #86efac; }
+    .toast.error { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+    .toast.info { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.3); color: #93c5fd; }
+    @keyframes toast-in { from { opacity:0; transform: translateY(-20px); } to { opacity:1; transform: translateY(0); } }
+    @keyframes toast-out { from { opacity:1; transform: translateY(0); } to { opacity:0; transform: translateY(-20px); } }
+
+    /* Confetti */
+    .confetti-piece {
+      position: fixed; width: 8px; height: 8px; border-radius: 2px;
+      pointer-events: none; z-index: 9998;
+      animation: confetti-fall 1.5s ease-out forwards;
+    }
+    @keyframes confetti-fall {
+      0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+      100% { opacity: 0; transform: translateY(200px) rotate(720deg) scale(0); }
+    }
+
+    /* Light theme - comprehensive overrides */
+    [data-theme="light"] body { background: #f8fafc; color: #1e293b; }
+    [data-theme="light"] .bg-dark-950,
+    [data-theme="light"] .bg-dark-950\/80 { background: #f8fafc !important; }
+    [data-theme="light"] .bg-dark-900 { background: #f1f5f9 !important; }
+    [data-theme="light"] .bg-dark-800\/60,
+    [data-theme="light"] .bg-dark-800\/50,
+    [data-theme="light"] .bg-dark-800\/40,
+    [data-theme="light"] .bg-dark-800\/30 { background: rgba(255,255,255,0.85) !important; }
+    [data-theme="light"] .bg-dark-800 { background: #ffffff !important; }
+    [data-theme="light"] .bg-dark-700\/60,
+    [data-theme="light"] .bg-dark-700\/50 { background: #f1f5f9 !important; }
+    [data-theme="light"] .bg-dark-700\/40,
+    [data-theme="light"] .bg-dark-700\/30 { background: #e2e8f0 !important; }
+    [data-theme="light"] .bg-dark-700 { background: #e2e8f0 !important; }
+    [data-theme="light"] .bg-dark-600 { background: #cbd5e1 !important; }
+    [data-theme="light"] .bg-brand-900\/40,
+    [data-theme="light"] .bg-brand-900\/30,
+    [data-theme="light"] .bg-brand-900\/25,
+    [data-theme="light"] .bg-brand-900\/20 { background: rgba(254,226,225,0.6) !important; }
+    [data-theme="light"] .bg-brand-900\/15 { background: rgba(254,226,225,0.4) !important; }
+    [data-theme="light"] .bg-yellow-900\/20,
+    [data-theme="light"] .bg-yellow-900\/15,
+    [data-theme="light"] .bg-yellow-900\/10 { background: rgba(254,249,195,0.5) !important; }
+    [data-theme="light"] .bg-green-900\/10 { background: rgba(220,252,231,0.5) !important; }
+    [data-theme="light"] .border-dark-800\/60,
+    [data-theme="light"] .border-dark-800 { border-color: #e2e8f0 !important; }
+    [data-theme="light"] .border-dark-700\/40,
+    [data-theme="light"] .border-dark-700\/30,
+    [data-theme="light"] .border-dark-700 { border-color: #cbd5e1 !important; }
+    [data-theme="light"] .border-dark-600\/50,
+    [data-theme="light"] .border-dark-600\/40,
+    [data-theme="light"] .border-dark-600\/20 { border-color: #e2e8f0 !important; }
+    [data-theme="light"] .border-brand-800\/30,
+    [data-theme="light"] .border-brand-800\/20 { border-color: rgba(254,202,202,0.5) !important; }
+    [data-theme="light"] .border-yellow-800\/20,
+    [data-theme="light"] .border-yellow-800\/15 { border-color: rgba(253,224,71,0.3) !important; }
+    [data-theme="light"] .text-gray-100:not(.text-white):not(button):not(a) { color: #0f172a !important; }
+    [data-theme="light"] .text-gray-200:not(.text-white):not(button):not(a) { color: #1e293b !important; }
+    [data-theme="light"] .text-gray-300 { color: #334155 !important; }
+    [data-theme="light"] .text-gray-400 { color: #475569 !important; }
+    [data-theme="light"] .text-gray-500 { color: #64748b !important; }
+    [data-theme="light"] .text-gray-600 { color: #64748b !important; }
+    [data-theme="light"] .text-brand-300,
+    [data-theme="light"] .text-brand-400 { color: #dc2626 !important; }
+    [data-theme="light"] .text-yellow-300,
+    [data-theme="light"] .text-yellow-400 { color: #b45309 !important; }
+    [data-theme="light"] .text-green-400 { color: #16a34a !important; }
+    [data-theme="light"] .text-blue-400 { color: #2563eb !important; }
+    [data-theme="light"] .stat-pulse { color: #dc2626 !important; }
+    [data-theme="light"] .placeholder-gray-500::placeholder { color: #94a3b8 !important; }
+    [data-theme="light"] .story-card:hover { box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
+    [data-theme="light"] ::-webkit-scrollbar-track { background: #f1f5f9; }
+    [data-theme="light"] ::-webkit-scrollbar-thumb { background: #cbd5e1; }
+    [data-theme="light"] input, [data-theme="light"] textarea, [data-theme="light"] select {
+      background: #ffffff !important; color: #1e293b !important; border-color: #cbd5e1 !important;
+    }
+    [data-theme="light"] .toast.success { background: rgba(34,197,94,0.9); color: #fff; }
+    [data-theme="light"] .toast.error { background: rgba(239,68,68,0.9); color: #fff; }
+    [data-theme="light"] .toast.info { background: rgba(59,130,246,0.9); color: #fff; }
+    /* Ensure all brand buttons have white text */
+    [data-theme="light"] a[class*="bg-brand-600"],
+    [data-theme="light"] a[class*="bg-brand-700"],
+    [data-theme="light"] button[class*="bg-brand-600"],
+    [data-theme="light"] button[class*="bg-brand-700"] { color: #ffffff !important; }
+
+    /* Comfort Reading Mode */
+    body.reading-mode { background: #1a1410 !important; }
+    body.reading-mode main { max-width: 650px; }
+    body.reading-mode main * { font-size: 1.125rem; line-height: 2; transition: all 0.3s ease; }
+    body.reading-mode .regret-tag { font-size: 0.9rem; }
+    body.reading-mode .text-xs, body.reading-mode .text-sm { font-size: 0.9rem !important; }
+    [data-theme="light"] body.reading-mode { background: #fdf6ee !important; }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .fade-up, .story-card, .floating-cta, .confetti-piece,
+      .hero-title, .stat-pulse, .toast, .toast.out, .react-btn {
+        animation: none !important;
+        transition: none !important;
+      }
+      .fade-up { opacity: 1; transform: none; }
+      .confetti-piece { display: none; }
+    }
+
+    /* Lazy load fade-in */
+    img.lazy-img { opacity: 0; transition: opacity 0.4s ease; }
+    img.lazy-img.loaded { opacity: 1; }
+  </style>
+</head>
+<body class="bg-dark-950 text-gray-100 min-h-screen">
+
+  <!-- Reading Progress Bar -->
+  <div id="readingProgress" style="position:fixed;top:0;left:0;height:3px;z-index:9999;background:linear-gradient(90deg,#dc2626,#ef4444,#f87171);width:0%;transition:width 0.1s linear;"></div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Nav -->
+  <nav class="sticky top-0 z-50 bg-dark-950/80 backdrop-blur-xl border-b border-dark-800/60">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
+      <a href="/" class="flex items-center gap-2 text-xl font-bold flex-shrink-0">
+        <span style="color: var(--primary); font-size: 1.5rem;">🦞</span>
+        <span>أول مرّة</span>
+      </a>
+      <form action="/" method="GET" class="flex-1 max-w-xs">
+        <input type="text" name="q" value="<%= typeof search !== 'undefined' ? search : '' %>" placeholder="🔍 ابحث عن تجربة..." class="w-full bg-dark-800/60 border border-dark-700/40 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-brand-500/50 transition placeholder-gray-500">
+      </form>
+      <a href="/submit" style="color:#fff !important" class="bg-brand-600 hover:bg-brand-700 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:shadow-lg hover:shadow-brand-600/25 flex-shrink-0">✍️ شارك</a>
+      <button onclick="toggleTheme()" id="themeToggle" class="w-9 h-9 flex items-center justify-center rounded-full bg-dark-800/60 border border-dark-700/40 hover:bg-dark-700/60 transition text-lg" title="تبديل المظهر">🌙</button>
+      <div class="flex items-center gap-1 flex-shrink-0">
+        <a href="/leaderboard" class="text-gray-400 hover:text-gray-200 px-2 py-1 text-sm transition" title="المتصدرين">🏆</a>
+        <a href="/best" class="text-gray-400 hover:text-gray-200 px-2 py-1 text-sm transition" title="الأفضل">⭐</a>
+        <a href="/my-stats" class="text-gray-400 hover:text-gray-200 px-2 py-1 text-sm transition" title="إحصائياتي">📊</a>
+      </div>
+      <a href="/favorites" class="text-gray-400 hover:text-gray-200 px-3 py-2.5 rounded-full text-sm font-bold transition flex-shrink-0" title="المفضلة" id="favNavLink">❤️</a>
+      <button onclick="toggleReadingMode()" id="readingModeBtn" class="w-9 h-9 flex items-center justify-center rounded-full bg-dark-800/60 border border-dark-700/40 hover:bg-dark-700/60 transition text-lg opacity-60" title="وضع القراءة المريحة">📖</button>
+      <!-- Theme Picker -->
+      <div class="relative flex-shrink-0">
+        <button onclick="document.getElementById('themePicker').classList.toggle('hidden')" class="w-9 h-9 flex items-center justify-center rounded-full bg-dark-800/60 border border-dark-700/40 hover:bg-dark-700/60 transition text-lg" title="تغيير السمة">🎨</button>
+        <div id="themePicker" class="hidden absolute left-0 top-12 bg-dark-800 border border-dark-700 rounded-2xl p-3 shadow-2xl z-50 min-w-[160px]">
+          <div class="text-xs text-gray-500 mb-2 px-1">اختر السمة</div>
+          <div id="themeOptions"></div>
+          <button onclick="setTheme('')" class="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-dark-700/60 transition text-sm text-gray-400 mt-1">
+            <span class="w-5 h-5 rounded-full flex-shrink-0 border-2 border-dark-600 bg-gradient-to-br from-red-500 via-blue-500 to-green-500"></span>
+            <span>تلقائي</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Welcome Tour Tooltip -->
+  <div id="tourTooltip" class="hidden fixed z-[10000] bg-dark-800 border border-dark-700 rounded-2xl p-5 shadow-2xl max-w-xs" style="transition:all 0.3s ease">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs text-gray-500" id="tourStep">1/3</span>
+      <button onclick="endTour()" class="text-gray-500 hover:text-gray-300 text-xs">✕ تخطي</button>
+    </div>
+    <p class="text-sm font-bold mb-3" id="tourText"></p>
+    <div class="flex gap-2">
+      <button onclick="nextTourStep()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition" id="tourNextBtn">التالي</button>
+      <button onclick="endTour()" class="bg-dark-700 hover:bg-dark-600 text-gray-300 px-4 py-1.5 rounded-lg text-xs font-bold transition">تخطي</button>
+    </div>
+    <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-dark-800 border-r border-b border-dark-700 rotate-45" id="tourArrow"></div>
+  </div>
+
+  <!-- Ad Header -->
+  <div class="max-w-4xl mx-auto px-4 mt-4">
+    <% if (typeof adsenseHeader !== 'undefined' && adsenseHeader) { %>
+      <div class="text-center"><%- adsenseHeader %></div>
+    <% } %>
+  </div>
+
+  <main class="max-w-4xl mx-auto px-4 py-8"><%- body %></main>
+
+  <!-- Footer -->
+  <footer class="border-t border-dark-800/60 mt-16 py-8">
+    <div class="max-w-4xl mx-auto px-4 text-center text-sm text-gray-600">
+      <div class="flex justify-center gap-6 mb-4">
+        <a href="/privacy" class="hover:text-gray-400 transition">سياسة الخصوصية</a>
+        <a href="/contact" class="hover:text-gray-400 transition">تواصل معنا</a>
+        <a href="/leaderboard" class="hover:text-gray-400 transition">🏆 المتصدرين</a>
+        <a href="/best" class="hover:text-gray-400 transition">⭐ الأفضل</a>
+        <a href="/my-stats" class="hover:text-gray-400 transition">📊 إحصائياتي</a>
+      </div>
+      <div class="flex justify-center flex-wrap gap-3 mb-4">
+        <a href="/category/علاقات" class="text-xs text-gray-500 hover:text-gray-300 transition">❤️ علاقات</a>
+        <a href="/category/دراسة" class="text-xs text-gray-500 hover:text-gray-300 transition">📚 دراسة</a>
+        <a href="/category/عمل" class="text-xs text-gray-500 hover:text-gray-300 transition">💼 عمل</a>
+        <a href="/category/صحة" class="text-xs text-gray-500 hover:text-gray-300 transition">🏥 صحة</a>
+        <a href="/category/سفر" class="text-xs text-gray-500 hover:text-gray-300 transition">✈️ سفر</a>
+        <a href="/category/مال" class="text-xs text-gray-500 hover:text-gray-300 transition">💰 مال</a>
+        <a href="/category/عائلة" class="text-xs text-gray-500 hover:text-gray-300 transition">👨‍👩‍👧‍👦 عائلة</a>
+        <a href="/category/شخصي" class="text-xs text-gray-500 hover:text-gray-300 transition">🌟 شخصي</a>
+      </div>
+      <p>© 2026 أول مرّة — كل التجارب حقيقية من ناس مثلك ❤️</p>
+    </div>
+  </footer>
+
+  <!-- Ad Footer -->
+  <div class="max-w-4xl mx-auto px-4 pb-6">
+    <% if (typeof adsenseFooter !== 'undefined' && adsenseFooter) { %>
+      <div class="text-center"><%- adsenseFooter %></div>
+    <% } %>
+  </div>
+
+  <!-- Floating CTA -->
+  <a href="/submit" id="floatingCta" style="color:#fff !important" class="floating-cta bg-brand-600 hover:bg-brand-700 px-6 py-3 rounded-full font-bold text-sm transition-all hidden">
+    ✍️ شارك تجربتك
+  </a>
+
+  <script>
+    // Toast system
+    function showToast(msg, type = 'success') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 3000);
+    }
+
+    // Confetti effect
+    function spawnConfetti(x, y) {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const colors = ['#f87171','#fbbf24','#34d399','#60a5fa','#c084fc','#fb923c'];
+      for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = x + 'px';
+        p.style.top = y + 'px';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.transform = `translate(${(Math.random()-0.5)*200}px, 0)`;
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 1500);
+      }
+    }
+
+    // Scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // Floating CTA
+    const cta = document.getElementById('floatingCta');
+    if (cta) {
+      window.addEventListener('scroll', () => { cta.classList.toggle('hidden', window.scrollY < 400); });
+      setTimeout(() => cta.classList.remove('hidden'), 100);
+    }
+
+    // Reactions
+    document.querySelectorAll('.react-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const storyId = this.dataset.story;
+        const type = this.dataset.type;
+        const countEl = this.querySelector('.react-count');
+        if (this.classList.contains('active')) {
+          this.classList.remove('active');
+          this.style.opacity = '0.5';
+          countEl.textContent = parseInt(countEl.textContent) - 1;
+        } else {
+          this.classList.add('active');
+          this.style.opacity = '1';
+          countEl.textContent = parseInt(countEl.textContent) + 1;
+          spawnConfetti(e.clientX, e.clientY);
+          fetch(`/story/${storyId}/react`, {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({type})
+          }).catch(() => {});
+        }
+      });
+    });
+    // Reading progress bar
+    window.addEventListener('scroll', () => {
+      const h = document.documentElement;
+      const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+      document.getElementById('readingProgress').style.width = Math.min(pct, 100) + '%';
+    });
+
+    // Welcome tour
+    // Welcome tour (disabled)
+    /*
+    const tourSteps = [
+      { target: 'a[href="/submit"]', text: 'مرحباً! 👋 شارك تجربتك هنا' },
+      { target: '.react-btn', text: 'تفاعل مع التجارب ❤️' },
+      { target: '#favNavLink', text: 'احفظ المفضلة' }
+    ];
+    let tourIdx = 0;
+    function startTour() {
+      if (localStorage.getItem('tour_completed')) return;
+      tourIdx = 0; showTourStep();
+    }
+    function showTourStep() {
+      if (tourIdx >= tourSteps.length) { endTour(); return; }
+      const step = tourSteps[tourIdx];
+      const el = document.querySelector(step.target);
+      if (!el) { tourIdx++; showTourStep(); return; }
+      const tip = document.getElementById('tourTooltip');
+      const rect = el.getBoundingClientRect();
+      tip.classList.remove('hidden');
+      document.getElementById('tourStep').textContent = (tourIdx+1) + '/3';
+      document.getElementById('tourText').textContent = step.text;
+      document.getElementById('tourNextBtn').textContent = tourIdx < tourSteps.length - 1 ? 'التالي' : 'إنهاء ✅';
+      tip.style.left = Math.max(8, Math.min(rect.left + rect.width/2 - 120, window.innerWidth - 260)) + 'px';
+      tip.style.top = (rect.bottom + 12) + 'px';
+      el.style.outline = '2px solid #dc2626'; el.style.outlineOffset = '4px'; el.style.borderRadius = '12px';
+    }
+    function nextTourStep() {
+      const el = document.querySelector(tourSteps[tourIdx]?.target);
+      if (el) { el.style.outline=''; el.style.outlineOffset=''; }
+      tourIdx++; showTourStep();
+    }
+    function endTour() {
+      tourSteps.forEach(s => { const el = document.querySelector(s.target); if(el){el.style.outline='';el.style.outlineOffset='';} });
+      document.getElementById('tourTooltip').classList.add('hidden');
+      localStorage.setItem('tour_completed','true');
+    }
+    document.addEventListener('click', function(e) {
+      if (!document.getElementById('tourTooltip').classList.contains('hidden') && !e.target.closest('#tourTooltip') && !e.target.closest(tourSteps[tourIdx]?.target)) endTour();
+    });
+    // setTimeout(startTour, 1500);
+    */
+
+    // Comfort Reading Mode
+    function toggleReadingMode() {
+      const on = document.body.classList.toggle('reading-mode');
+      localStorage.setItem('reading_mode', on ? '1' : '0');
+      document.getElementById('readingModeBtn').style.opacity = on ? '1' : '0.6';
+    }
+    if (localStorage.getItem('reading_mode') === '1') {
+      document.body.classList.add('reading-mode');
+      document.getElementById('readingModeBtn').style.opacity = '1';
+    }
+
+    // Theme toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isLight = html.getAttribute('data-theme') === 'light';
+      html.setAttribute('data-theme', isLight ? 'dark' : 'light');
+      localStorage.setItem('theme', isLight ? 'dark' : 'light');
+      document.getElementById('themeToggle').textContent = isLight ? '🌙' : '☀️';
+    }
+    (function() {
+      const saved = localStorage.getItem('theme');
+      if (saved === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.getElementById('themeToggle').textContent = '☀️';
+      }
+    })();
+
+    // Service Worker registration
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
+    // Lazy loading for images
+    const lazyObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const img = e.target;
+          if (img.dataset.src) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
+          img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+          img.classList.add('loaded');
+          lazyObserver.unobserve(img);
+        }
+      });
+    }, { rootMargin: '200px' });
+    document.querySelectorAll('img[data-src]').forEach(img => lazyObserver.observe(img));
+
+    // User theme picker
+    const THEMES = { red: {name:'أحمر',primary:'#dc2626'}, purple: {name:'بنفسجي',primary:'#7c3aed'}, blue: {name:'أزرق',primary:'#2563eb'}, green: {name:'أخضر',primary:'#059669'}, orange: {name:'برتقالي',primary:'#ea580c'} };
+    const currentTheme = '<%= typeof themeKey !== "undefined" ? themeKey : "" %>';
+    const el = document.getElementById('themeOptions');
+    if (el) {
+      Object.entries(THEMES).forEach(([key, t]) => {
+        const btn = document.createElement('button');
+        btn.className = 'flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-dark-700/60 transition text-sm' + (currentTheme === key ? ' bg-dark-700/60' : '');
+        btn.onclick = () => setTheme(key);
+        btn.innerHTML = '<span class="w-5 h-5 rounded-full flex-shrink-0 border-2 border-white/20" style="background:'+t.primary+'"></span><span>'+t.name+'</span>' + (currentTheme === key ? '<span class="mr-auto text-xs">✓</span>' : '');
+        el.appendChild(btn);
+      });
+      const autoBtn = document.createElement('button');
+      autoBtn.className = 'flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-dark-700/60 transition text-sm text-gray-400 mt-1';
+      autoBtn.onclick = () => setTheme('');
+      autoBtn.innerHTML = '<span class="w-5 h-5 rounded-full flex-shrink-0 border-2 border-dark-600 bg-gradient-to-br from-red-500 via-blue-500 to-green-500"></span><span>تلقائي</span>';
+      el.appendChild(autoBtn);
+    }
+    function setTheme(key) {
+      fetch('/set-theme', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({theme: key}) })
+        .then(r => r.json())
+        .then(() => window.location.href = window.location.pathname + '?t=' + Date.now());
+    }
+    document.addEventListener('click', function(e) {
+      const picker = document.getElementById('themePicker');
+      if (picker && !picker.classList.contains('hidden') && !e.target.closest('#themePicker') && !e.target.closest('[title="تغيير السمة"]')) {
+        picker.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

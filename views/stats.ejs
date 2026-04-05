@@ -1,0 +1,98 @@
+<div class="max-w-4xl mx-auto fade-up">
+  <div class="text-center mb-10">
+    <h1 class="text-3xl font-bold mb-2">📊 إحصائيات عامة</h1>
+    <p class="text-gray-400">نظرة شاملة على محتوى أول مرّة</p>
+  </div>
+
+  <!-- Overview Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+    <div class="bg-dark-800/40 border border-dark-700/30 rounded-2xl p-5 text-center">
+      <div class="text-3xl font-bold text-brand-400"><%= totalStories %></div>
+      <div class="text-sm text-gray-500 mt-1">تجربة منشورة</div>
+    </div>
+    <div class="bg-dark-800/40 border border-dark-700/30 rounded-2xl p-5 text-center">
+      <div class="text-3xl font-bold text-yellow-400"><%= totalViews %></div>
+      <div class="text-sm text-gray-500 mt-1">مشاهدة</div>
+    </div>
+    <div class="bg-dark-800/40 border border-dark-700/30 rounded-2xl p-5 text-center">
+      <div class="text-3xl font-bold text-green-400"><%= totalReactions %></div>
+      <div class="text-sm text-gray-500 mt-1">تفاعل</div>
+    </div>
+    <div class="bg-dark-800/40 border border-dark-700/30 rounded-2xl p-5 text-center">
+      <div class="text-3xl font-bold text-purple-400"><%= totalComments %></div>
+      <div class="text-sm text-gray-500 mt-1">تعليق</div>
+    </div>
+  </div>
+
+  <!-- Averages -->
+  <div class="grid grid-cols-2 gap-4 mb-10">
+    <div class="bg-dark-800/40 border border-dark-700/30 rounded-2xl p-5 text-center">
+      <div class="text-2xl font-bold text-brand-300"><%= avgDone %></div>
+      <div class="text-sm text-gray-500 mt-1">متوسط أعداد الندم لكل تجربة</div>
+    </div>
+    <div class="bg-dark-800/40 border border-dark-700/30 rounded-2xl p-5 text-center">
+      <div class="text-2xl font-bold text-yellow-300"><%= avgNotDone %></div>
+      <div class="text-sm text-gray-500 mt-1">متوسط الأمنيات لكل تجربة</div>
+    </div>
+  </div>
+
+  <!-- Top Regrets -->
+  <div class="grid md:grid-cols-2 gap-6 mb-10">
+    <div class="bg-dark-800/40 border border-dark-700/30 rounded-2xl p-6">
+      <h2 class="text-lg font-bold mb-4 flex items-center gap-2">😔 أكثر 10 أشياء ندموا عليها</h2>
+      <div class="space-y-3">
+        <% topDone.forEach(function(item, i) { %>
+        <div class="flex items-center gap-3">
+          <span class="w-7 h-7 rounded-full bg-brand-600/20 text-brand-400 text-xs font-bold flex items-center justify-center flex-shrink-0"><%= i+1 %></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-gray-200 truncate"><%= item[0] %></div>
+            <div class="mt-1 h-2 bg-dark-700 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-l from-brand-500 to-brand-600 rounded-full" style="width: <%= (item[1] / topDone[0][1] * 100) %>%"></div>
+            </div>
+          </div>
+          <span class="text-xs text-gray-500 flex-shrink-0"><%= item[1] %></span>
+        </div>
+        <% }); %>
+        <% if (topDone.length === 0) { %><p class="text-gray-500 text-sm text-center py-4">لا توجد بيانات</p><% } %>
+      </div>
+    </div>
+
+    <div class="bg-dark-800/40 border border-dark-700/30 rounded-2xl p-6">
+      <h2 class="text-lg font-bold mb-4 flex items-center gap-2">✨ أكثر 10 أشياء تمنوا لو فعلوها</h2>
+      <div class="space-y-3">
+        <% topNotDone.forEach(function(item, i) { %>
+        <div class="flex items-center gap-3">
+          <span class="w-7 h-7 rounded-full bg-yellow-600/20 text-yellow-400 text-xs font-bold flex items-center justify-center flex-shrink-0"><%= i+1 %></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-gray-200 truncate"><%= item[0] %></div>
+            <div class="mt-1 h-2 bg-dark-700 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-l from-yellow-500 to-yellow-600 rounded-full" style="width: <%= (item[1] / topNotDone[0][1] * 100) %>%"></div>
+            </div>
+          </div>
+          <span class="text-xs text-gray-500 flex-shrink-0"><%= item[1] %></span>
+        </div>
+        <% }); %>
+        <% if (topNotDone.length === 0) { %><p class="text-gray-500 text-sm text-center py-4">لا توجد بيانات</p><% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Distribution -->
+  <div class="bg-dark-800/40 border border-dark-700/30 rounded-2xl p-6 mb-10">
+    <h2 class="text-lg font-bold mb-6 flex items-center gap-2">📁 توزيع التصنيفات</h2>
+    <div class="space-y-4">
+      <% catDist.forEach(function(cat) { %>
+      <div class="flex items-center gap-3">
+        <span class="text-xl w-8 text-center"><%= cat.icon %></span>
+        <span class="text-sm text-gray-300 w-16 text-right"><%= cat.name %></span>
+        <div class="flex-1 h-6 bg-dark-700 rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-l from-brand-500 to-purple-500 rounded-full flex items-center justify-end px-2 transition-all" style="width: <%= Math.max(cat.count / catMax * 100, 8) %>%">
+            <% if (cat.count > 0) { %><span class="text-xs text-white font-bold"><%= cat.count %></span><% } %>
+          </div>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+    <div class="mt-4 text-center text-xs text-gray-500">إجمالي: <%= totalDoneItems %> عنصر ندم · <%= totalNotDoneItems %> أمنية</div>
+  </div>
+</div>

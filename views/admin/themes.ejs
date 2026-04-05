@@ -1,0 +1,58 @@
+<h2 class="text-2xl font-bold mb-6">🎨 السمات</h2>
+<p class="text-gray-500 mb-6 text-sm">اختر سمة الموقع. السمة النشطة تُطبّق على جميع الزوار.</p>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4" id="themeGrid">
+  <% Object.entries(themes).forEach(([key, t]) => { %>
+  <div onclick="setTheme('<%= key %>')" class="bg-white rounded-xl p-5 shadow-sm border-2 transition-all hover:shadow-md cursor-pointer <%= activeTheme === key ? 'border-orange-500 ring-2 ring-orange-200' : 'border-gray-200 hover:border-gray-300' %>" id="card-<%= key %>">
+    <div class="flex items-center justify-between mb-3">
+      <span class="font-bold"><%= t.name %></span>
+      <% if (activeTheme === key) { %>
+        <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full" id="badge-<%= key %>">✓ نشطة</span>
+      <% } %>
+    </div>
+    <div class="flex gap-1.5 mb-3">
+      <div class="w-8 h-8 rounded-lg shadow-sm" style="background:<%= t.primary %>"></div>
+      <div class="w-8 h-8 rounded-lg shadow-sm" style="background:<%= t.hover %>"></div>
+      <div class="w-8 h-8 rounded-lg shadow-sm" style="background:<%= t.light %>"></div>
+      <div class="w-8 h-8 rounded-lg shadow-sm" style="background:<%= t.accent %>"></div>
+    </div>
+    <div class="text-xs text-gray-400">
+      <code dir="ltr"><%= t.primary %></code>
+    </div>
+  </div>
+  <% }); %>
+</div>
+
+<div id="toast" class="hidden fixed bottom-4 left-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm z-50">تم تغيير السمة ✅</div>
+
+<script>
+async function setTheme(key) {
+  try {
+    const res = await fetch('/admin/themes', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({theme: key})
+    });
+    if (res.ok) {
+      // Update UI
+      document.querySelectorAll('#themeGrid > div').forEach(card => {
+        card.classList.remove('border-orange-500', 'ring-2', 'ring-orange-200');
+        card.classList.add('border-gray-200');
+      });
+      document.querySelectorAll('[id^="badge-"]').forEach(b => b.remove());
+      const card = document.getElementById('card-' + key);
+      card.classList.remove('border-gray-200');
+      card.classList.add('border-orange-500', 'ring-2', 'ring-orange-200');
+      const badge = document.createElement('span');
+      badge.id = 'badge-' + key;
+      badge.className = 'bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full';
+      badge.textContent = '✓ نشطة';
+      card.querySelector('.flex').appendChild(badge);
+      // Show toast
+      const toast = document.getElementById('toast');
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 2000);
+    }
+  } catch(e) { console.error(e); }
+}
+</script>

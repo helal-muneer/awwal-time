@@ -1,0 +1,64 @@
+<div class="fade-up">
+  <h1 class="text-3xl font-bold mb-2">❤️ المفضلة</h1>
+  <p class="text-gray-400 mb-8">التجارب التي حفظتها</p>
+
+  <div id="favoritesGrid" class="grid md:grid-cols-2 gap-4 md:gap-5">
+    <div class="text-center py-16 text-gray-500 col-span-2">
+      <div class="text-5xl mb-4">❤️</div>
+      <p class="text-xl mb-2">جارٍ تحميل المفضلة...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+function getFavorites(){try{return JSON.parse(localStorage.getItem('awwal_favorites')||'[]')}catch{return[]}}
+
+function renderFavorites(stories) {
+  const grid = document.getElementById('favoritesGrid');
+  if (!stories || stories.length === 0) {
+    grid.innerHTML = `<div class="text-center py-16 text-gray-500 col-span-2">
+      <div class="text-5xl mb-4">💔</div>
+      <p class="text-xl mb-2">لا توجد تجارب محفوظة</p>
+      <p class="text-sm text-gray-600 mb-6">اضغط على 🤍 لحفظ أي تجربة</p>
+      <a href="/" class="bg-brand-600 hover:bg-brand-700 px-8 py-3 rounded-full font-bold transition-all" style="color:#fff !important">تصفح التجارب</a>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = stories.map(s => {
+    const doneItems = (s.done_regrets||'').split('|||').filter(Boolean);
+    const notDoneItems = (s.notdone_regrets||'').split('|||').filter(Boolean);
+    return `<div class="story-card bg-dark-800/40 border border-dark-700/30 rounded-2xl p-5 fade-up visible">
+      <a href="/story/${s.id}" class="block">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 bg-dark-700/60 rounded-full flex items-center justify-center text-lg border border-dark-600/50">
+            ${s.hide_name ? '👤' : '😊'}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-bold truncate">${s.hide_name ? 'مجهول' : s.name}</div>
+            <div class="text-xs text-gray-500">${new Date(s.created_at).toLocaleDateString('ar-SA')}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500">👁 ${s.views}</span>
+            <button onclick="event.preventDefault();toggleFavorite(${s.id});setTimeout(renderFavoritesFromStorage,100)" class="fav-btn text-lg hover:scale-125 transition" data-id="${s.id}">❤️</button>
+          </div>
+        </div>
+        ${doneItems.length ? `<div class="mb-2"><div class="text-xs text-brand-400 font-semibold mb-1">😔 ندم عليها</div><div class="flex flex-wrap">${doneItems.slice(0,2).map(d=>`<span class="regret-tag bg-brand-900/25 text-brand-300 border border-brand-800/20">${d}</span>`).join('')}</div></div>` : ''}
+        ${notDoneItems.length ? `<div class="mb-2"><div class="text-xs text-yellow-400 font-semibold mb-1">✨ تمنى لو فعلها</div><div class="flex flex-wrap">${notDoneItems.slice(0,2).map(d=>`<span class="regret-tag bg-yellow-900/15 text-yellow-300 border border-yellow-800/15">${d}</span>`).join('')}</div></div>` : ''}
+      </a>
+    </div>`;
+  }).join('');
+}
+
+function toggleFavorite(id){let f=getFavorites();id=Number(id);if(f.includes(id)){f=f.filter(x=>x!==id);showToast('تم الإزالة من المفضلة','info')}else{f.push(id);showToast('تم الإضافة للمفضلة ❤️','success')}localStorage.setItem('awwal_favorites',JSON.stringify(f))}
+
+function renderFavoritesFromStorage() {
+  const ids = getFavorites();
+  if (ids.length === 0) { renderFavorites([]); return; }
+  fetch('/api/favorites', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ids})
+  }).then(r=>r.json()).then(stories => renderFavorites(stories));
+}
+
+renderFavoritesFromStorage();
+</script>

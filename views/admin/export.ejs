@@ -1,0 +1,29 @@
+<h2 class="text-2xl font-bold mb-6">📦 تصدير البيانات</h2>
+
+<div class="grid md:grid-cols-2 gap-6">
+  <!-- Stories Export -->
+  <div class="bg-white rounded-xl p-6 shadow-sm border">
+    <div class="text-3xl mb-3">📝</div>
+    <h3 class="font-bold text-lg mb-2">تصدير التجارب</h3>
+    <p class="text-sm text-gray-500 mb-4">تصدير جميع التجارب (بما فيها غير المنشورة)</p>
+    <div class="flex gap-2">
+      <a href="/admin/export?type=stories&format=csv" class="text-sm bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full transition">📊 CSV</a>
+      <a href="/admin/export?type=stories&format=json" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full transition">📋 JSON</a>
+    </div>
+  </div>
+
+  <!-- Emails Export -->
+  <div class="bg-white rounded-xl p-6 shadow-sm border">
+    <div class="text-3xl mb-3">📧</div>
+    <h3 class="font-bold text-lg mb-2">تصدير الإيميلات</h3>
+    <p class="text-sm text-gray-500 mb-4">تصدير جميع الإيميلات المسجلة</p>
+    <div class="flex gap-2">
+      <a href="/admin/export?type=emails&format=csv" class="text-sm bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full transition">📊 CSV</a>
+      <a href="/admin/export?type=emails&format=json" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full transition">📋 JSON</a>
+    </div>
+  </div>
+</div>
+
+<div class="mt-8 bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800">
+  <strong>💡 نصيحة:</strong> ملفات CSV يمكن فتحها في Excel أو Google Sheets. ملفات JSON مناسبة للمطورين والنسخ الاحتياطي.
+</div>

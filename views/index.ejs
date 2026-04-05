@@ -1,0 +1,221 @@
+<!-- Hero -->
+<div class="text-center py-10 md:py-16 fade-up">
+  <div class="inline-flex items-center gap-2 bg-dark-800/60 border border-dark-700/40 rounded-full px-4 py-1.5 text-xs text-gray-400 mb-6">
+    <span class="w-2 h-2 bg-green-500 rounded-full stat-pulse"></span>
+    <span><%= totalStories %> تجربة حقيقية من ناس مثلك</span>
+  </div>
+  <h1 class="text-4xl md:text-6xl font-extrabold mb-4">
+    <span style="color: var(--primary)">أول مرّة</span>
+  </h1>
+  <p class="text-lg md:text-xl text-gray-400 mb-3 max-w-lg mx-auto">كل شخص عنده تجربة مرّ بها لأول مرة — شارك تجربتك وتعلم من تجارب الآخرين</p>
+  <div class="flex justify-center gap-6 mt-8 text-sm">
+    <div class="text-center">
+      <div class="text-2xl font-bold text-brand-400 stat-pulse"><%= totalStories %></div>
+      <div class="text-gray-500 text-xs">تجربة</div>
+    </div>
+    <div class="w-px bg-dark-700"></div>
+    <div class="text-center">
+      <div class="text-2xl font-bold text-yellow-400"><%= totalViews %></div>
+      <div class="text-gray-500 text-xs">قراءة</div>
+    </div>
+    <div class="w-px bg-dark-700"></div>
+    <div class="text-center">
+      <div class="text-2xl font-bold text-green-400"><%= totalReactions %></div>
+      <div class="text-gray-500 text-xs">تفاعل</div>
+    </div>
+  </div>
+
+<% if (weeklyQuestion) { %>
+<div class="max-w-2xl mx-auto mb-8 fade-up">
+  <div class="relative rounded-2xl p-6 bg-dark-800/60 bg-gradient-to-l from-purple-500/20 via-brand-500/20 to-yellow-500/20 overflow-hidden">
+    <div class="absolute inset-0 rounded-2xl border-2 border-transparent" style="border-image: linear-gradient(to left, #a855f7, #ef4444, #eab308) 1;"></div>
+    <div class="absolute top-3 left-3 text-xs bg-brand-600 text-white px-3 py-1 rounded-full font-bold">💡 سؤال الأسبوع</div>
+    <p class="text-lg md:text-xl font-bold text-center mt-4 text-gray-100"><%= weeklyQuestion %></p>
+    <div class="text-center mt-4">
+      <a href="/submit" class="inline-flex items-center gap-1 text-sm text-brand-400 hover:text-brand-300 transition">شارك إجابتك ←</a>
+    </div>
+  </div>
+</div>
+<% } %>
+</div>
+
+<!-- Categories -->
+<div class="fade-up mb-8">
+  <div class="flex flex-wrap justify-center gap-2">
+    <a href="/?sort=<%= sort %>&q=<%= search %>" class="px-4 py-2 rounded-full text-sm font-semibold transition <%= !category ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/25' : 'bg-dark-800/60 text-gray-400 border border-dark-700/40 hover:border-brand-800/40 hover:text-gray-300' %>">🌟 الكل</a>
+    <% categories.forEach(function(c) { %>
+      <a href="/?category=<%= encodeURIComponent(c.name) %>&sort=<%= sort %>&q=<%= search %>" class="px-4 py-2 rounded-full text-sm font-semibold transition <%= category === c.name ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/25' : 'bg-dark-800/60 text-gray-400 border border-dark-700/40 hover:border-brand-800/40 hover:text-gray-300' %>">
+        <%= c.icon %> <%= c.name %> <span class="text-xs opacity-60">(<%= categoryCounts[c.name] %>)</span>
+      </a>
+    <% }); %>
+  </div>
+</div>
+
+<!-- Sort & Search Bar -->
+<% if (stories.length > 0) { %>
+<div class="fade-up flex flex-wrap items-center justify-between gap-3 mb-6">
+  <div class="flex gap-2">
+    <% var sorts = [{v:'latest',l:'الأحدث'},{v:'views',l:'الأكثر مشاهدة'},{v:'reacts',l:'الأكثر تفاعلاً'},{v:'random',l:'عشوائي'}]; %>
+    <% sorts.forEach(function(s) { %>
+      <a href="/?sort=<%= s.v %>&category=<%= encodeURIComponent(category) %>&q=<%= search %>" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition <%= sort === s.v ? 'bg-dark-700 text-white border border-dark-600' : 'text-gray-500 hover:text-gray-300' %>"><%= s.l %></a>
+    <% }); %>
+  </div>
+  <% if (category || search) { %>
+    <a href="/" class="text-xs text-brand-400 hover:text-brand-300">✕ مسح الفلاتر</a>
+  <% } %>
+</div>
+<% } %>
+
+<!-- Featured Story -->
+<% if (featured && !category && !search) { %>
+  <%
+    var fDone = (featured.done_regrets || '').split('|||').filter(Boolean);
+    var fNotDone = (featured.notdone_regrets || '').split('|||').filter(Boolean);
+  %>
+  <div class="fade-up stagger-1 mb-10">
+    <div class="bg-gradient-to-l from-brand-900/40 to-dark-800/40 border border-brand-800/30 rounded-2xl p-6 md:p-8 relative overflow-hidden">
+      <div class="absolute top-4 left-4 bg-brand-600 text-white text-xs font-bold px-3 py-1 rounded-full">⭐ تجربة اليوم</div>
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 bg-brand-600/20 rounded-full flex items-center justify-center text-2xl">
+          <%= featured.hide_name ? '👤' : '😊' %>
+        </div>
+        <div>
+          <div class="font-bold text-lg"><%= featured.hide_name ? 'مجهول' : featured.name %></div>
+          <div class="text-xs text-gray-500"><%= new Date(featured.created_at).toLocaleDateString('ar-SA') %></div>
+        </div>
+      </div>
+      <a href="/story/<%= featured.id %>" class="block space-y-3">
+        <% if (fDone.length) { %>
+          <div>
+            <div class="text-xs text-brand-400 font-bold mb-1.5">😔 ندم عليها:</div>
+            <div><% fDone.slice(0,3).forEach(function(d){ %><span class="regret-tag bg-brand-900/40 text-brand-300 border border-brand-800/30"><%= d %></span><% }); %></div>
+          </div>
+        <% } %>
+        <% if (fNotDone.length) { %>
+          <div>
+            <div class="text-xs text-yellow-400 font-bold mb-1.5">✨ تمنى لو فعلها:</div>
+            <div><% fNotDone.slice(0,3).forEach(function(d){ %><span class="regret-tag bg-yellow-900/20 text-yellow-300 border border-yellow-800/20"><%= d %></span><% }); %></div>
+          </div>
+        <% } %>
+        <div class="flex items-center gap-4 text-xs text-gray-500 pt-2">
+          <span>👁 <%= featured.views %></span>
+          <span>❤️ <%= featured.total_reacts || 0 %></span>
+          <span class="text-brand-400 mr-auto">اقرأ التفاصيل ←</span>
+        </div>
+      </a>
+    </div>
+  </div>
+<% } %>
+
+<!-- Stories Grid -->
+<% if (stories.length === 0) { %>
+<div class="text-center py-20 text-gray-500 fade-up">
+  <div class="text-6xl mb-4">📝</div>
+  <p class="text-xl mb-2"><%= search ? 'لا توجد نتائج للبحث' : 'لا توجد تجارب بعد' %></p>
+  <p class="text-sm text-gray-600 mb-6"><%= search ? 'جرّب كلمات بحث مختلفة' : 'كن أول من يشارك تجربته!' %></p>
+  <a href="/submit" class="bg-brand-600 hover:bg-brand-700 px-8 py-3 rounded-full font-bold transition-all hover:shadow-lg hover:shadow-brand-600/25" style="color:#fff !important">✍️ شارك الآن</a>
+</div>
+<% } else { %>
+<div class="grid md:grid-cols-2 gap-4 md:gap-5" id="storiesGrid">
+  <% stories.forEach(function(s, idx) { %>
+  <%
+    var doneItems = (s.done_regrets || '').split('|||').filter(Boolean);
+    var notDoneItems = (s.notdone_regrets || '').split('|||').filter(Boolean);
+    var totalReact = (s.reactions && s.reactions.relatable || 0) + (s.reactions && s.reactions.sympathy || 0) + (s.reactions && s.reactions.motivated || 0);
+  %>
+  <div class="story-card bg-dark-800/40 border border-dark-700/30 rounded-2xl p-5 fade-up stagger-<%= (idx % 3) + 1 %>">
+    <a href="/story/<%= s.id %>" class="block">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 bg-dark-700/60 rounded-full flex items-center justify-center text-lg border border-dark-600/50">
+          <%= s.hide_name ? '👤' : '😊' %>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold truncate"><%= s.hide_name ? 'مجهول' : s.name %></div>
+          <div class="text-xs text-gray-500 flex items-center gap-2">
+            <span><%= new Date(s.created_at).toLocaleDateString('ar-SA') %></span>
+            <% if (s.category && s.category !== 'شخصي') { %>
+              <span class="text-brand-400">• <%= s.category %></span>
+            <% } %>
+          </div>
+        </div>
+        <div class="flex items-center gap-1 text-xs text-gray-500">
+          <span>👁</span><span><%= s.views %></span>
+        </div>
+        <button onclick="event.preventDefault();toggleFavorite(<%= s.id %>)" class="fav-btn text-lg hover:scale-125 transition" data-id="<%= s.id %>">🤍</button>
+      </div>
+      <% if (s.image_url) { %>
+      <div class="mb-3 rounded-xl overflow-hidden">
+        <img src="/<%= s.image_url %>" alt="" class="w-full h-40 object-cover lazy-img" loading="lazy" onload="this.classList.add('loaded')">
+      </div>
+      <% } %>
+
+      <% if (doneItems.length) { %>
+      <div class="mb-2.5">
+        <div class="text-xs text-brand-400 font-semibold mb-1">😔 ندم عليها</div>
+        <div class="flex flex-wrap">
+          <% doneItems.slice(0,2).forEach(function(d) { %>
+            <span class="regret-tag bg-brand-900/25 text-brand-300 border border-brand-800/20"><%= d %></span>
+          <% }); %>
+          <% if (doneItems.length > 2) { %>
+            <span class="regret-tag bg-dark-700/60 text-gray-400">+<%= doneItems.length - 2 %></span>
+          <% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <% if (notDoneItems.length) { %>
+      <div class="mb-2.5">
+        <div class="text-xs text-yellow-400 font-semibold mb-1">✨ تمنى لو فعلها</div>
+        <div class="flex flex-wrap">
+          <% notDoneItems.slice(0,2).forEach(function(d) { %>
+            <span class="regret-tag bg-yellow-900/15 text-yellow-300 border border-yellow-800/15"><%= d %></span>
+          <% }); %>
+          <% if (notDoneItems.length > 2) { %>
+            <span class="regret-tag bg-dark-700/60 text-gray-400">+<%= notDoneItems.length - 2 %></span>
+          <% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <div class="flex items-center gap-1 pt-2 border-t border-dark-700/30 mt-3" onclick="event.preventDefault()">
+        <button class="react-btn flex items-center gap-1 text-xs px-2 py-1 rounded-lg hover:bg-dark-700/50 transition <%= (s.reactions && s.reactions.relatable) ? 'active opacity-100' : 'opacity-40' %>"
+          data-story="<%= s.id %>" data-type="relatable">🫂 <span class="react-count"><%= s.reactions && s.reactions.relatable || 0 %></span></button>
+        <button class="react-btn flex items-center gap-1 text-xs px-2 py-1 rounded-lg hover:bg-dark-700/50 transition <%= (s.reactions && s.reactions.sympathy) ? 'active opacity-100' : 'opacity-40' %>"
+          data-story="<%= s.id %>" data-type="sympathy">❤️ <span class="react-count"><%= s.reactions && s.reactions.sympathy || 0 %></span></button>
+        <button class="react-btn flex items-center gap-1 text-xs px-2 py-1 rounded-lg hover:bg-dark-700/50 transition <%= (s.reactions && s.reactions.motivated) ? 'active opacity-100' : 'opacity-40' %>"
+          data-story="<%= s.id %>" data-type="motivated">💪 <span class="react-count"><%= s.reactions && s.reactions.motivated || 0 %></span></button>
+        <span class="mr-auto text-xs text-gray-600">اضغط للتفاعل</span>
+      </div>
+    </a>
+  </div>
+  <% }); %>
+</div>
+<% } %>
+
+<!-- Load More -->
+<% if (hasMore) { %>
+<div class="text-center mt-8 fade-up">
+  <a href="/?page=<%= currentPage + 1 %>&sort=<%= sort %>&category=<%= encodeURIComponent(category) %>&q=<%= search %>" class="bg-dark-800/60 hover:bg-dark-700 border border-dark-700/40 px-8 py-3 rounded-full font-bold transition-all inline-flex items-center gap-2">
+    تحميل المزيد ⬇️
+  </a>
+  <div class="text-xs text-gray-600 mt-2">صفحة <%= currentPage %> من <%= totalPages %></div>
+</div>
+<% } %>
+
+<!-- Community CTA -->
+<div class="fade-up mt-14 bg-gradient-to-l from-dark-800/60 to-dark-900/60 border border-dark-700/30 rounded-2xl p-8 md:p-10 text-center">
+  <div class="text-4xl mb-4">🤝</div>
+  <h2 class="text-2xl font-bold mb-2">انضم لمجتمع أول مرّة</h2>
+  <p class="text-gray-400 mb-6 max-w-md mx-auto text-sm">كل تجربة تشاركها ممكن تساعد شخص آخر يتخطى نفس الموقف — حتى لو كانت تجربة صغيرة</p>
+  <div class="flex flex-col sm:flex-row justify-center gap-3">
+    <a href="/submit" class="bg-brand-600 hover:bg-brand-700 px-8 py-3 rounded-full font-bold transition-all hover:shadow-lg hover:shadow-brand-600/25" style="color:#fff !important">✍️ شارك تجربتك</a>
+  </div>
+</div>
+
+<script>
+function getFavorites(){try{return JSON.parse(localStorage.getItem('awwal_favorites')||'[]')}catch{return[]}}
+function isFavorite(id){return getFavorites().includes(Number(id))}
+function toggleFavorite(id){let f=getFavorites();id=Number(id);if(f.includes(id)){f=f.filter(x=>x!==id);showToast('تم الإزالة من المفضلة','info')}else{f.push(id);showToast('تم الإضافة للمفضلة ❤️','success')}localStorage.setItem('awwal_favorites',JSON.stringify(f));updateFavButtons()}
+function updateFavButtons(){document.querySelectorAll('.fav-btn').forEach(b=>{b.textContent=isFavorite(b.dataset.id)?'❤️':'🤍'})}
+updateFavButtons();
+</script>

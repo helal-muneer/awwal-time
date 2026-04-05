@@ -1,0 +1,40 @@
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">🚨 البلاغات</h1>
+  <% if (reports.length > 0) { %>
+  <form action="/admin/reports/clear" method="POST" onsubmit="return confirm('مسح جميع البلاغات؟')">
+    <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition">🗑 مسح الكل</button>
+  </form>
+  <% } %>
+</div>
+
+<% if (reports.length === 0) { %>
+<div class="text-center py-16 text-gray-400 bg-white rounded-xl border">
+  <div class="text-5xl mb-4">✅</div>
+  <p class="text-lg">لا توجد بلاغات</p>
+</div>
+<% } else { %>
+<div class="space-y-3">
+  <% reports.forEach(r => { %>
+  <div class="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex-1">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold"><%= r.reason %></span>
+          <span class="text-xs text-gray-400"><%= new Date(r.created_at).toLocaleString('ar-SA') %></span>
+        </div>
+        <% if (r.story_id) { %>
+          <p class="text-sm text-gray-600">📝 تجربة: <a href="/story/<%= r.story_id %>" target="_blank" class="text-blue-600 hover:underline"><%= r.story_hide_name ? 'مجهول' : r.story_name %> #<%= r.story_id %></a></p>
+        <% } %>
+        <% if (r.comment_id) { %>
+          <p class="text-sm text-gray-600 mt-1">💬 تعليق <%= r.comment_name %>: <span class="text-gray-500">"<%= (r.comment_text || '').substring(0, 80) %><%= (r.comment_text || '').length > 80 ? '...' : '' %>"</span></p>
+        <% } %>
+      </div>
+      <form action="/admin/report/<%= r.id %>/delete" method="POST">
+        <button class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded-full transition">✕ حذف</button>
+      </form>
+    </div>
+  </div>
+  <% }); %>
+</div>
+<% } %>

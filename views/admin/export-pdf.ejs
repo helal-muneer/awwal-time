@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>أول مرّة - تصدير التجارب</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'IBM Plex Sans Arabic', sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #fff; color: #1a1a1a; padding: 40px; }
+    .header { text-align: center; border-bottom: 3px solid #ef4444; padding-bottom: 20px; margin-bottom: 30px; }
+    .header h1 { font-size: 28px; color: #ef4444; }
+    .header p { color: #666; margin-top: 5px; font-size: 14px; }
+    .header .date { color: #999; font-size: 12px; margin-top: 8px; }
+    .story { border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 20px; page-break-inside: avoid; }
+    .story-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .story-name { font-size: 18px; font-weight: 700; }
+    .story-meta { display: flex; gap: 12px; font-size: 12px; color: #888; }
+    .story-category { background: #fef2f2; color: #ef4444; padding: 2px 10px; border-radius: 20px; font-size: 12px; }
+    .story-section { margin-bottom: 12px; }
+    .story-section h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .story-section ul { list-style: none; padding: 0; }
+    .story-section li { padding: 4px 0; font-size: 14px; border-bottom: 1px dashed #f0f0f0; }
+    .story-comment { background: #f9fafb; padding: 10px; border-radius: 8px; font-size: 13px; color: #555; margin-top: 8px; }
+    .stats { background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 30px; display: flex; gap: 30px; justify-content: center; }
+    .stats div { text-align: center; }
+    .stats .num { font-size: 24px; font-weight: 700; color: #ef4444; }
+    .stats .label { font-size: 12px; color: #888; }
+
+    @media print {
+      body { padding: 20px; }
+      .no-print { display: none !important; }
+      .story { break-inside: avoid; }
+      @page { margin: 1.5cm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🦞 أول مرّة</h1>
+    <p>جميع التجارب المنشورة - تصدير PDF</p>
+    <div class="date">تاريخ التصدير: <%= new Date().toLocaleDateString('ar-SA') %> | عدد التجارب: <%= stories.length %></div>
+  </div>
+
+  <div class="stats no-print">
+    <div><div class="num"><%= stories.length %></div><div class="label">تجربة</div></div>
+    <div><div class="num"><%= stories.reduce((s,r) => s + r.views, 0) %></div><div class="label">مشاهدة</div></div>
+  </div>
+
+  <div class="no-print" style="text-align:center;margin-bottom:20px;">
+    <button onclick="window.print()" style="background:#ef4444;color:white;border:none;padding:10px 30px;border-radius:8px;font-size:16px;cursor:pointer;font-family:inherit;">
+      🖨️ طباعة / حفظ PDF
+    </button>
+  </div>
+
+  <% stories.forEach(function(s, i) { %>
+    <div class="story">
+      <div class="story-header">
+        <div>
+          <div class="story-name"><%= s.hide_name ? 'مجهول' : s.name %></div>
+          <div class="story-meta">
+            <span>🔢 #<%= s.id %></span>
+            <span>👁️ <%= s.views %> مشاهدة</span>
+            <span>📅 <%= new Date(s.created_at).toLocaleDateString('ar-SA') %></span>
+          </div>
+        </div>
+        <span class="story-category"><%= s.category || 'شخصي' %></span>
+      </div>
+
+      <% if (s.done_regrets) { %>
+        <div class="story-section">
+          <h4>😔 أشياء ندموا عليها</h4>
+          <ul>
+            <% s.done_regrets.split('|||').filter(Boolean).forEach(function(item) { %>
+              <li>• <%= item %></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <% if (s.notdone_regrets) { %>
+        <div class="story-section">
+          <h4>✨ أشياء تمنوا لو فعلوها</h4>
+          <ul>
+            <% s.notdone_regrets.split('|||').filter(Boolean).forEach(function(item) { %>
+              <li>• <%= item %></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <% if (s.comment) { %>
+        <div class="story-comment">💬 <%= s.comment %></div>
+      <% } %>
+    </div>
+  <% }); %>
+
+  <div style="text-align:center;margin-top:40px;color:#999;font-size:12px;">
+    <p>🦞 أول مرّة - awwal-time.ksawats.com</p>
+    <p>تم التصدير في <%= new Date().toLocaleString('ar-SA') %></p>
+  </div>
+</body>
+</html>

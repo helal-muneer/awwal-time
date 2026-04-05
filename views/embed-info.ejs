@@ -1,0 +1,79 @@
+<div class="fade-up max-w-2xl mx-auto">
+  <h1 class="text-3xl font-bold mb-4">📎 أداة التضمين</h1>
+  <p class="text-gray-400 mb-8">ضمّن آخر تجارب أول مرّة في موقعك باستخدام iframe</p>
+
+  <div class="bg-dark-800/50 border border-dark-700/30 rounded-xl p-6 mb-8">
+    <h3 class="font-bold mb-4">🛠️ مولّد الكود</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-bold mb-1 text-gray-300">عدد التجارب</label>
+        <input type="number" id="embed-count" value="5" min="1" max="20" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:border-brand-500">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-1 text-gray-300">التصنيف</label>
+        <select id="embed-category" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:border-brand-500">
+          <option value="">الكل</option>
+          <option value="علاقات">علاقات</option>
+          <option value="دراسة">دراسة</option>
+          <option value="عمل">عمل</option>
+          <option value="صحة">صحة</option>
+          <option value="سفر">سفر</option>
+          <option value="مال">مال</option>
+          <option value="عائلة">عائلة</option>
+          <option value="شخصي">شخصي</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-1 text-gray-300">التصميم</label>
+        <select id="embed-theme" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:border-brand-500">
+          <option value="dark">داكن</option>
+          <option value="light">فاتح</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <label class="block text-sm font-bold mb-2 text-gray-300">كود التضمين:</label>
+      <div class="relative">
+        <pre id="embed-code" dir="ltr" class="bg-dark-900/80 border border-dark-700/30 text-green-400 p-4 rounded-lg text-sm overflow-x-auto"></pre>
+        <button onclick="copyEmbed()" style="color:#fff !important" class="absolute top-2 left-2 bg-brand-600 hover:bg-brand-700 px-3 py-1 rounded text-xs transition">نسخ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-dark-800/50 border border-dark-700/30 rounded-xl p-6">
+    <h3 class="font-bold mb-4 text-gray-200">👁️ معاينة</h3>
+    <div class="border border-dark-700/30 rounded-lg overflow-hidden" style="height: 500px;">
+      <iframe id="embed-preview" class="w-full h-full border-0"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+function generateEmbed() {
+  const count = document.getElementById('embed-count').value;
+  const category = document.getElementById('embed-category').value;
+  const theme = document.getElementById('embed-theme').value;
+  let url = `/embed?count=${count}&theme=${theme}`;
+  if (category) url += `&category=${encodeURIComponent(category)}`;
+  const origin = window.location.origin;
+  const code = `<iframe src="${origin}${url}" width="600" height="500" frameborder="0" style="border:none;max-width:100%;"></iframe>`;
+  document.getElementById('embed-code').textContent = code;
+  document.getElementById('embed-preview').src = url;
+}
+
+function copyEmbed() {
+  const code = document.getElementById('embed-code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = event.target;
+    btn.textContent = '✅ تم!';
+    setTimeout(() => btn.textContent = 'نسخ', 2000);
+  });
+}
+
+document.querySelectorAll('#embed-count, #embed-category, #embed-theme').forEach(el => {
+  el.addEventListener('change', generateEmbed);
+  el.addEventListener('input', generateEmbed);
+});
+generateEmbed();
+</script>

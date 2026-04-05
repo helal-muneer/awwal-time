@@ -1,0 +1,141 @@
+<h2 class="text-2xl font-bold mb-6">⚙️ الإعدادات</h2>
+
+<!-- Current Theme -->
+<div class="bg-white rounded-xl p-5 shadow-sm border max-w-2xl mb-6">
+  <h3 class="font-bold mb-3">🎨 السمة الحالية</h3>
+  <div class="flex items-center gap-3">
+    <span class="w-8 h-8 rounded-lg" style="background:<%= typeof allThemes !== 'undefined' && allThemes[themeKey] ? allThemes[themeKey].primary : '#dc2626' %>"></span>
+    <span class="font-bold"><%= typeof allThemes !== 'undefined' && allThemes[themeKey] ? allThemes[themeKey].name : 'الأحمر' %></span>
+    <a href="/admin/themes" class="mr-auto text-orange-600 hover:text-orange-700 text-sm font-bold">تغيير السمة →</a>
+  </div>
+</div>
+
+<form method="POST" class="space-y-6 max-w-2xl">
+
+  <!-- Site Info -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-4">🌐 معلومات الموقع</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-bold mb-1">اسم الموقع</label>
+        <input type="text" name="site_name" value="<%= siteName %>" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-1">وصف الموقع</label>
+        <textarea name="site_description" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"><%= siteDescription %></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Moderation -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-4">🛡️ الإشراف</h3>
+    <label class="flex items-center gap-3 cursor-pointer">
+      <input type="checkbox" name="require_approval" id="require_approval"
+        <% if (requireApproval) { %>checked<% } %>
+        class="w-5 h-5 accent-orange-600">
+      <div>
+        <div class="font-bold">انتظار الموافقة على المشاركات</div>
+        <div class="text-sm text-gray-500">عند الإيقاف، المشاركات تُنشر مباشرة بدون مراجعة</div>
+      </div>
+    </label>
+  </div>
+
+  <!-- Weekly Question -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-4">💡 سؤال الأسبوع</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-bold mb-1">السؤال المعروض على الصفحة الرئيسية</label>
+        <input type="text" name="weekly_question" value="<%= weeklyQuestion %>" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="مثال: ما أول شيء تتمنى لو قمت به في حياتك؟">
+      </div>
+    </div>
+  </div>
+
+  <!-- Ads -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-4">📢 الإعلانات</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-bold mb-1">كود إعلان الهيدر (أعلى الصفحة)</label>
+        <textarea name="adsense_header" rows="4" dir="ltr"
+          class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500"
+          placeholder="ضع كود AdSense هنا..."><%= adsenseHeader %></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-1">كود إعلان الفوتر (أسفل الصفحة)</label>
+        <textarea name="adsense_footer" rows="4" dir="ltr"
+          class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500"
+          placeholder="ضع كود AdSense هنا..."><%= adsenseFooter %></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Notifications -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-4">📧 إعدادات البريد الإلكتروني</h3>
+    <div class="space-y-4">
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="email_enabled" <% if (emailEnabled) { %>checked<% } %> class="w-5 h-5 accent-orange-600">
+        <div>
+          <div class="font-bold">تفعيل إشعارات البريد</div>
+          <div class="text-sm text-gray-500">إرسال إشعار عند نشر تجربة جديدة</div>
+        </div>
+      </label>
+      <div>
+        <label class="block text-sm font-bold mb-1">خادم SMTP</label>
+        <input type="text" name="mail_host" value="<%= mailHost %>" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="smtp.gmail.com">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-1">المنفذ</label>
+        <input type="number" name="mail_port" value="<%= mailPort %>" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="587">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-1">اسم المستخدم</label>
+        <input type="text" name="mail_user" value="<%= mailUser %>" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="your@email.com">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-1">كلمة المرور</label>
+        <input type="password" name="mail_pass" value="<%= mailPass %>" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-1">بريد المرسل</label>
+        <input type="text" name="mail_from" value="<%= mailFrom %>" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-full font-bold transition">💾 حفظ الإعدادات</button>
+</form>
+
+<!-- Cache Status -->
+<div class="mt-8 bg-white rounded-xl p-5 shadow-sm border max-w-2xl">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="font-bold">⚡ حالة الكاش</h3>
+    <span class="text-sm text-gray-500"><%= cacheEntries.length %> عنصر</span>
+  </div>
+  <% if (cacheEntries.length === 0) { %>
+    <p class="text-gray-400 text-sm">لا توجد عناصر في الكاش حالياً</p>
+  <% } else { %>
+    <div class="space-y-1 text-sm">
+      <% cacheEntries.forEach(e => { %>
+        <div class="flex justify-between py-1 border-b last:border-0">
+          <code class="text-xs bg-gray-100 px-2 py-0.5 rounded"><%= e.key %></code>
+          <span class="text-gray-500"><%= e.age %></span>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</div>
+
+<!-- Quick Actions -->
+<div class="mt-6 bg-white rounded-xl p-5 shadow-sm border max-w-2xl">
+  <h3 class="font-bold mb-4">🔧 أدوات سريعة</h3>
+  <div class="flex flex-wrap gap-3">
+    <a href="/admin/backup" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-bold transition">💾 نسخ احتياطي</a>
+    <a href="/admin/backup-list" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-full text-sm font-bold transition">📁 النسخ السابقة</a>
+    <a href="/admin/notifications" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full text-sm font-bold transition">🔔 الإشعارات</a>
+    <a href="/embed-info" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition">📎 أداة التضمين</a>
+    <a href="/api/docs" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full text-sm font-bold transition">📘 توثيق API</a>
+  </div>
+</div>

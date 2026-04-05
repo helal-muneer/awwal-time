@@ -1,0 +1,42 @@
+<h2 class="text-2xl font-bold mb-6">🔔 الإشعارات</h2>
+
+<div class="grid gap-6">
+  <!-- Pending -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-4 text-orange-600">⏳ في الانتظار (<%= pending.length %>)</h3>
+    <% if (pending.length === 0) { %>
+      <p class="text-gray-400 text-sm">لا توجد إشعارات في الانتظار</p>
+    <% } else { %>
+      <div class="space-y-3">
+        <% pending.forEach(n => { %>
+          <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+            <div>
+              <span class="text-sm font-bold"><%= n.type %></span>
+              <span class="text-xs text-gray-500 block"><%= n.created_at %></span>
+            </div>
+            <form method="POST" action="/admin/notifications/<%= n.id %>/send">
+              <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded-full text-sm">إرسال</button>
+            </form>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Sent -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-4 text-green-600">✅ تم الإرسال (<%= sent.length %>)</h3>
+    <% if (sent.length === 0) { %>
+      <p class="text-gray-400 text-sm">لا توجد إشعارات مرسلة</p>
+    <% } else { %>
+      <div class="space-y-2 text-sm">
+        <% sent.forEach(n => { %>
+          <div class="flex justify-between p-2 bg-gray-50 rounded-lg">
+            <span><%= n.type %></span>
+            <span class="text-gray-400"><%= n.created_at %></span>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</div>

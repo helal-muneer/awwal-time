@@ -1,0 +1,133 @@
+<!-- Stats Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  <a href="/admin?filter=pending" class="bg-white rounded-xl p-4 shadow-sm border text-center hover:shadow-md transition">
+    <div class="text-3xl font-bold text-orange-500"><%= pending %></div>
+    <div class="text-sm text-gray-500">بانتظار المراجعة</div>
+  </a>
+  <a href="/admin?filter=approved" class="bg-white rounded-xl p-4 shadow-sm border text-center hover:shadow-md transition">
+    <div class="text-3xl font-bold text-green-500"><%= approved %></div>
+    <div class="text-sm text-gray-500">منشورة</div>
+  </a>
+  <a href="/admin/emails" class="bg-white rounded-xl p-4 shadow-sm border text-center hover:shadow-md transition">
+    <div class="text-3xl font-bold text-blue-500"><%= emails %></div>
+    <div class="text-sm text-gray-500">إيميلات</div>
+  </a>
+  <a href="/admin/stats" class="bg-white rounded-xl p-4 shadow-sm border text-center hover:shadow-md transition">
+    <div class="text-3xl font-bold text-purple-500"><%= total %></div>
+    <div class="text-sm text-gray-500">إجمالي التجارب</div>
+  </a>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="bg-white rounded-xl p-4 shadow-sm border mb-4">
+  <form method="GET" action="/admin" class="flex flex-wrap gap-3 items-center">
+    <input type="text" name="search" value="<%= search %>" placeholder="🔍 بحث بالاسم، التعليق، أو المحتوى..."
+      class="flex-1 min-w-[200px] border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+    <select name="filter" class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+      <option value="all" <%= filter==='all'?'selected':'' %>>الكل</option>
+      <option value="pending" <%= filter==='pending'?'selected':'' %>>بانتظار المراجعة</option>
+      <option value="approved" <%= filter==='approved'?'selected':'' %>>منشورة</option>
+    </select>
+    <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm transition">بحث</button>
+    <% if (search || filter !== 'all') { %>
+      <a href="/admin" class="text-sm text-gray-500 hover:text-gray-700">مسح الفلتر ✕</a>
+    <% } %>
+  </form>
+</div>
+
+<!-- Bulk Actions -->
+<% if (stories.length > 0) { %>
+<div class="flex items-center gap-3 mb-4">
+  <div class="flex gap-2">
+    <button onclick="bulkAction('approve_all')" class="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-full transition">✅ موافقة على المحددة</button>
+    <button onclick="bulkAction('delete_all')" class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-full transition">🗑 حذف المحددة</button>
+  </div>
+  <label class="flex items-center gap-1 text-xs text-gray-500">
+    <input type="checkbox" id="selectAll" onchange="toggleAll(this.checked)" class="accent-orange-600"> تحديد الكل
+  </label>
+</div>
+<% } %>
+
+<!-- Stories List -->
+<% if (stories.length === 0) { %>
+  <div class="text-center py-16 text-gray-400 bg-white rounded-xl border">
+    <div class="text-5xl mb-4">📭</div>
+    <p class="text-lg">لا توجد تجارب</p>
+    <% if (search) { %><p class="text-sm mt-2">جرّب كلمة بحث أخرى</p><% } %>
+  </div>
+<% } else { %>
+  <div class="space-y-3">
+    <% stories.forEach(s => {
+      const doneItems = (s.done_regrets || '').split('|||').filter(Boolean);
+      const notDoneItems = (s.notdone_regrets || '').split('|||').filter(Boolean);
+    %>
+    <div class="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition <%= s.approved ? '' : 'border-orange-300 bg-orange-50/30' %>">
+      <div class="flex items-start gap-3">
+        <input type="checkbox" name="story_ids" value="<%= s.id %>" class="mt-1 accent-orange-600 story-check">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <input type="checkbox" name="bulk_id" value="<%= s.id %>" class="hidden story-bulk">
+            <span class="font-bold"><%= s.hide_name ? '👤 مجهول' : s.name %></span>
+            <%- s.approved
+              ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">✅ منشورة</span>'
+              : '<span class="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">⏳ بانتظار</span>' %>
+          </div>
+          <div class="text-xs text-gray-500 mb-2">
+            <%= new Date(s.created_at).toLocaleString('ar-SA') %> · 👁 <%= s.views %> · 🔗 <%= s.shares %> · 📧 <%= s.email || 'بدون' %>
+          </div>
+
+          <% if (doneItems.length) { %>
+            <div class="flex flex-wrap gap-1 mb-1">
+              <% doneItems.forEach(d => { %><span class="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded-lg">😔 <%= d %></span><% }) %>
+            </div>
+          <% } %>
+          <% if (notDoneItems.length) { %>
+            <div class="flex flex-wrap gap-1 mb-1">
+              <% notDoneItems.forEach(d => { %><span class="text-xs bg-yellow-50 text-yellow-600 px-2 py-0.5 rounded-lg">✨ <%= d %></span><% }) %>
+            </div>
+          <% } %>
+          <% if (s.comment) { %>
+            <div class="text-xs text-gray-600 bg-gray-50 rounded-lg p-2 mt-1">💬 <%= s.comment %></div>
+          <% } %>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <a href="/admin/story/<%= s.id %>/edit" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full transition text-center">✏️ تعديل</a>
+          <form action="/admin/story/<%= s.id %>/featured" method="POST">
+            <button class="text-xs <%= s.featured ? 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-700' %> px-3 py-1 rounded-full transition w-full"><%= s.featured ? '⭐ مميزة' : '☆ تمييز' %></button>
+          </form>
+          <form action="/admin/story/<%= s.id %>/pin" method="POST">
+            <button class="text-xs <%= s.pinned ? 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-700' %> px-3 py-1 rounded-full transition w-full"><%= s.pinned ? '📌 مميز' : '📌 تمييز' %></button>
+          </form>
+          <% if (!s.approved) { %>
+            <form action="/admin/story/<%= s.id %>/approve" method="POST">
+              <button class="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded-full transition w-full">✅ موافقة</button>
+            </form>
+          <% } %>
+          <form action="/admin/story/<%= s.id %>/delete" method="POST" onsubmit="return confirm('حذف هذه التجربة؟')">
+            <button class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded-full transition w-full">🗑 حذف</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<script>
+function toggleAll(checked) {
+  document.querySelectorAll('.story-check').forEach(cb => cb.checked = checked);
+}
+function getSelected() {
+  return Array.from(document.querySelectorAll('.story-check:checked')).map(cb => cb.value).join(',');
+}
+function bulkAction(action) {
+  const ids = getSelected();
+  if (!ids) return alert('حدد تجربة واحدة على الأقل');
+  if (action === 'delete_all' && !confirm(`حذف ${ids.split(',').length} تجربة؟`)) return;
+  const form = document.createElement('form');
+  form.method = 'POST'; form.action = '/admin/bulk';
+  form.innerHTML = `<input name="action" value="${action}"><input name="ids" value="${ids}">`;
+  document.body.appendChild(form); form.submit();
+}
+</script>

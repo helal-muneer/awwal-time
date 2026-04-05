@@ -1,0 +1,162 @@
+<h2 class="text-2xl font-bold mb-6">📈 الإحصائيات</h2>
+
+<!-- Overview Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+  <div class="bg-white rounded-xl p-4 shadow-sm border text-center">
+    <div class="text-3xl font-bold text-blue-500"><%= totalStories %></div>
+    <div class="text-sm text-gray-500">إجمالي التجارب</div>
+  </div>
+  <div class="bg-white rounded-xl p-4 shadow-sm border text-center">
+    <div class="text-3xl font-bold text-green-500"><%= approvedStories %></div>
+    <div class="text-sm text-gray-500">منشورة</div>
+  </div>
+  <div class="bg-white rounded-xl p-4 shadow-sm border text-center">
+    <div class="text-3xl font-bold text-purple-500"><%= totalViews %></div>
+    <div class="text-sm text-gray-500">مشاهدة</div>
+  </div>
+  <div class="bg-white rounded-xl p-4 shadow-sm border text-center">
+    <div class="text-3xl font-bold text-orange-500"><%= avgViews %></div>
+    <div class="text-sm text-gray-500">متوسط المشاهدات</div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="grid md:grid-cols-2 gap-6 mb-8">
+  <!-- Submissions Over Time - Line Chart -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-3">📅 المشاركات اليومية (آخر 30 يوم)</h3>
+    <canvas id="submissionsChart" height="200"></canvas>
+  </div>
+
+  <!-- Category Distribution - Doughnut Chart -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-3">📂 توزيع التصنيفات</h3>
+    <canvas id="categoryChart" height="200"></canvas>
+  </div>
+
+  <!-- Daily Views Trend - Bar Chart -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-3">👁️ المشاهدات اليومية (آخر 30 يوم)</h3>
+    <canvas id="viewsChart" height="200"></canvas>
+  </div>
+
+  <!-- Top Story -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-3">🏆 الأكثر مشاهدة</h3>
+    <% if (topStory) { %>
+      <div class="flex items-center gap-3">
+        <div class="text-3xl">👁️</div>
+        <div>
+          <div class="font-bold"><%= topStory.hide_name ? 'مجهول' : topStory.name %></div>
+          <div class="text-sm text-gray-500"><%= topStory.views %> مشاهدة</div>
+          <a href="/story/<%= topStory.id %>" class="text-xs text-blue-600 hover:underline">عرض التجربة</a>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="text-gray-400">لا توجد تجارب بعد</div>
+    <% } %>
+  </div>
+</div>
+
+<div class="grid md:grid-cols-2 gap-6 mb-8">
+  <!-- Content Stats -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-3">📊 محتوى المشاركات</h3>
+    <div class="space-y-3">
+      <div class="flex justify-between items-center">
+        <span class="text-sm">😔 أشياء ندموا عليها</span>
+        <span class="font-bold text-red-500"><%= totalDoneItems %></span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-sm">✨ أشياء تمنوا فعلها</span>
+        <span class="font-bold text-yellow-600"><%= totalNotDoneItems %></span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-sm">📧 إيميلات مسجلة</span>
+        <span class="font-bold text-blue-500"><%= totalEmails %></span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-sm">⏳ بانتظار المراجعة</span>
+        <span class="font-bold text-orange-500"><%= pendingStories %></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Sources -->
+  <% if (emailSources.length > 0) { %>
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-3">📧 مصادر الإيميلات</h3>
+    <div class="flex gap-4">
+      <% emailSources.forEach(s => { %>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-blue-500"><%= s.count %></div>
+          <div class="text-xs text-gray-500"><%= s.source %></div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+</div>
+
+<script>
+// Submissions Line Chart
+const subCtx = document.getElementById('submissionsChart').getContext('2d');
+new Chart(subCtx, {
+  type: 'line',
+  data: {
+    labels: <%- JSON.stringify(dailyStats.map(d => d.date.slice(5))) %>,
+    datasets: [{
+      label: 'المشاركات',
+      data: <%- JSON.stringify(dailyStats.map(d => d.count)) %>,
+      borderColor: '#f97316',
+      backgroundColor: 'rgba(249, 115, 22, 0.1)',
+      fill: true,
+      tension: 0.4,
+      pointRadius: 3
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+  }
+});
+
+// Category Doughnut Chart
+const catCtx = document.getElementById('categoryChart').getContext('2d');
+new Chart(catCtx, {
+  type: 'doughnut',
+  data: {
+    labels: <%- JSON.stringify(categoryDist.map(c => c.icon + ' ' + c.name)) %>,
+    datasets: [{
+      data: <%- JSON.stringify(categoryDist.map(c => c.count)) %>,
+      backgroundColor: ['#ec4899','#3b82f6','#f59e0b','#22c55e','#0ea5e9','#eab308','#a855f7','#f97316']
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font: { family: 'IBM Plex Sans Arabic' } } } }
+  }
+});
+
+// Views Bar Chart
+const viewCtx = document.getElementById('viewsChart').getContext('2d');
+new Chart(viewCtx, {
+  type: 'bar',
+  data: {
+    labels: <%- JSON.stringify(dailyViews.map(d => d.date.slice(5))) %>,
+    datasets: [{
+      label: 'المشاهدات',
+      data: <%- JSON.stringify(dailyViews.map(d => d.total || 0)) %>,
+      backgroundColor: 'rgba(139, 92, 246, 0.6)',
+      borderColor: '#8b5cf6',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true } }
+  }
+});
+</script>
