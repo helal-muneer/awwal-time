@@ -860,7 +860,7 @@ app.post('/admin/bulk', requireModerator, (req, res) => {
 
 // 8. Account management
 app.get('/admin/account', requireSuper, (req, res) => {
-  const admins = db.prepare('SELECT id, username, role, created_at FROM admins').all();
+  const admins = db.prepare('SELECT id, username, role FROM admins').all();
   const currentUser = getAdminUsername(req);
   const currentRole = db.prepare('SELECT role FROM admins WHERE username = ?').get(currentUser);
   res.render('admin/account', {
@@ -899,7 +899,7 @@ app.post('/admin/account/password', requireSuper, (req, res) => {
 
   db.prepare('UPDATE admins SET password = ? WHERE id = ?').run(bcrypt.hashSync(new_password, 10), admin.id);
   logWithAudit(req, 'تغيير كلمة المرور', '');
-  const admins2 = db.prepare('SELECT id, username, role, created_at FROM admins').all();
+  const admins2 = db.prepare('SELECT id, username, role FROM admins').all();
   const currentUser2 = getAdminUsername(req);
   const currentRole2 = db.prepare('SELECT role FROM admins WHERE username = ?').get(currentUser2);
   res.render('admin/account', {
