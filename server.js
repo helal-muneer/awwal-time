@@ -677,6 +677,7 @@ app.get('/admin/settings', requireSuper, (req, res) => {
     features: getFeatureSettings(),
     allCategories: ALL_CATEGORIES(),
     cacheEntries: cache.stats(),
+    commentsMode: getSetting('comments_mode') || 'open',
     title: 'الإعدادات - أول مرّة'
   });
 });

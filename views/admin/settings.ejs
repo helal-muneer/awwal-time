@@ -41,9 +41,9 @@
     </label>
     <label class="flex items-center gap-3 cursor-pointer mt-4">
       <select name="comments_mode" class="w-full bg-white border rounded-lg px-4 py-2 text-sm">
-        <option value="open" <%= getSetting('comments_mode') === 'open' ? 'selected' : '' %>>💬 السماح بالتعليقات مباشرة</option>
-        <option value="approval" <%= getSetting('comments_mode') === 'approval' ? 'selected' : '' %>>⏳ السماح مع انتظار الموافقة</option>
-        <option value="disabled" <%= getSetting('comments_mode') === 'disabled' ? 'selected' : '' %>>🚫 إيقاف التعليقات</option>
+        <option value="open" <%= commentsMode === 'open' ? 'selected' : '' %>>💬 السماح بالتعليقات مباشرة</option>
+        <option value="approval" <%= commentsMode === 'approval' ? 'selected' : '' %>>⏳ السماح مع انتظار الموافقة</option>
+        <option value="disabled" <%= commentsMode === 'disabled' ? 'selected' : '' %>>🚫 إيقاف التعليقات</option>
       </select>
     </label>
   </div>
