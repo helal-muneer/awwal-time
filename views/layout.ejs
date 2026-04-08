@@ -310,8 +310,15 @@
 
   <main class="max-w-4xl lg:max-w-7xl mx-auto px-4 py-8"><%- body %></main>
 
+  <!-- Ad Footer -->
+  <div class="max-w-4xl mx-auto px-4 pb-6">
+    <% if (typeof adsenseFooter !== 'undefined' && adsenseFooter) { %>
+      <div class="text-center"><%- adsenseFooter %></div>
+    <% } %>
+  </div>
+
   <!-- Footer -->
-  <footer class="border-t border-dark-800/60 mt-16 py-8">
+  <footer class="border-t border-dark-800/60 mt-0 py-8">
     <div class="max-w-4xl mx-auto px-4 text-center text-sm text-gray-600">
       <div class="flex justify-center gap-6 mb-4">
         <a href="/privacy" class="hover:text-gray-400 transition">سياسة الخصوصية</a>
@@ -320,13 +327,6 @@
       <p>© 2026 أول مرّة — كل التجارب حقيقية من ناس مثلك ❤️</p>
     </div>
   </footer>
-
-  <!-- Ad Footer -->
-  <div class="max-w-4xl mx-auto px-4 pb-6">
-    <% if (typeof adsenseFooter !== 'undefined' && adsenseFooter) { %>
-      <div class="text-center"><%- adsenseFooter %></div>
-    <% } %>
-  </div>
 
   <script>
     // Toast system
