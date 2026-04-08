@@ -268,11 +268,28 @@ function updateFavButtons(){document.querySelectorAll('.fav-btn').forEach(b=>{b.
 updateFavButtons();
 
 // Category radio active state
-document.querySelectorAll('.peer-checked\\:cat-active').forEach(el => {
-  const input = el.previousElementSibling;
-  if (input && input.checked) {
-    el.style.background = 'color-mix(in srgb, var(--primary) 20%, transparent)';
-    el.style.borderColor = 'color-mix(in srgb, var(--primary) 50%, transparent)';
-  }
+function updateCategoryStyles() {
+  document.querySelectorAll('input[name="category"]').forEach(r => {
+    const div = r.closest('label').querySelector('.peer-checked\\:cat-active, [class*="cat-active"]');
+    if (!div) {
+      const label = r.closest('label');
+      const inner = label ? label.querySelector('div') : null;
+      if (inner) {
+        if (r.checked) {
+          inner.style.background = 'color-mix(in srgb, var(--primary) 20%, transparent)';
+          inner.style.borderColor = 'color-mix(in srgb, var(--primary) 50%, transparent)';
+          inner.style.color = 'var(--primary)';
+        } else {
+          inner.style.background = '';
+          inner.style.borderColor = '';
+          inner.style.color = '';
+        }
+      }
+    }
+  });
+}
+document.querySelectorAll('input[name="category"]').forEach(r => {
+  r.addEventListener('change', updateCategoryStyles);
 });
+updateCategoryStyles();
 </script>

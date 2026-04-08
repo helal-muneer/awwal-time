@@ -175,11 +175,13 @@ document.querySelectorAll('input[name="category"]').forEach(r => {
     document.querySelectorAll('.category-option').forEach(d => {
       d.style.background = '';
       d.style.borderColor = '';
+      d.style.color = '';
     });
     const div = this.closest('label').querySelector('.category-option');
     if (div) {
       div.style.background = 'color-mix(in srgb, var(--primary) 20%, transparent)';
       div.style.borderColor = 'color-mix(in srgb, var(--primary) 50%, transparent)';
+      div.style.color = 'var(--primary)';
     }
   });
 });
