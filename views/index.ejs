@@ -229,8 +229,12 @@ document.getElementById('modalSubmitForm').addEventListener('submit', function(e
 
   const params = new URLSearchParams(new FormData(form));
   if (isAdvanced) {
+    // Merge main text with comment field
+    const extraComment = form.comment ? form.comment.value.trim() : '';
+    const combinedComment = extraComment ? text + '\n\n' + extraComment : text;
     params.set('simple_mode', '0');
-    params.set('comment', text);
+    params.set('comment', combinedComment);
+    params.set('simple_text', '');
   }
 
   fetch('/submit', {
@@ -273,9 +277,9 @@ function updateCategoryStyles() {
     const inner = r.closest('label') ? r.closest('label').querySelector('div') : null;
     if (inner) {
       if (r.checked) {
-        inner.style.background = 'color-mix(in srgb, var(--primary) 20%, transparent)';
-        inner.style.borderColor = 'color-mix(in srgb, var(--primary) 50%, transparent)';
-        inner.style.color = 'var(--primary)';
+        inner.style.background = 'rgba(220,38,38,0.15)';
+        inner.style.borderColor = 'rgba(220,38,38,0.5)';
+        inner.style.color = '#dc2626';
       } else {
         inner.style.background = '';
         inner.style.borderColor = '';
