@@ -181,15 +181,11 @@ document.getElementById('submitForm').addEventListener('submit', function(e) {
 document.querySelectorAll('input[name="category"]').forEach(r => {
   r.addEventListener('change', function() {
     document.querySelectorAll('.category-option').forEach(d => {
-      d.style.background = '';
-      d.style.borderColor = '';
-      d.style.color = '';
+      d.classList.remove('cat-selected');
     });
     const div = this.closest('label').querySelector('.category-option');
     if (div) {
-      div.style.background = 'var(--primary)';
-      div.style.borderColor = 'var(--primary)';
-      div.style.color = '#fff';
+      div.classList.add('cat-selected');
     }
   });
 });

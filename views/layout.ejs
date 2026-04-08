@@ -250,6 +250,18 @@
     /* Lazy load fade-in */
     img.lazy-img { opacity: 0; transition: opacity 0.4s ease; }
     img.lazy-img.loaded { opacity: 1; }
+
+    /* Category selected state */
+    .cat-selected {
+      background: color-mix(in srgb, var(--primary) 15%, transparent) !important;
+      border-color: color-mix(in srgb, var(--primary) 50%, transparent) !important;
+      color: var(--primary) !important;
+    }
+    [data-theme="light"] .cat-selected {
+      background: color-mix(in srgb, var(--primary) 12%, white) !important;
+      border-color: color-mix(in srgb, var(--primary) 40%, transparent) !important;
+      color: var(--primary) !important;
+    }
   </style>
   <% if (typeof customHeadCode !== 'undefined' && customHeadCode) { %>
   <%- customHeadCode %>

@@ -277,13 +277,9 @@ function updateCategoryStyles() {
     const inner = r.closest('label') ? r.closest('label').querySelector('div') : null;
     if (inner) {
       if (r.checked) {
-        inner.style.background = 'var(--primary)';
-        inner.style.borderColor = 'var(--primary)';
-        inner.style.color = '#fff';
+        inner.classList.add('cat-selected');
       } else {
-        inner.style.background = '';
-        inner.style.borderColor = '';
-        inner.style.color = '';
+        inner.classList.remove('cat-selected');
       }
     }
   });
