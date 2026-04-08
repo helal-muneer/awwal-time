@@ -15,13 +15,13 @@
       <select name="category" class="bg-dark-700 border border-dark-600 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-brand-500 transition">
         <option value="">كل التصنيفات</option>
         <% (categories || []).forEach(function(c) { %>
-          <option value="<%= c.name %>" <%= category === c.name ? 'selected' : %>><%= c.icon %> <%= c.name %></option>
+          <option value="<%= c.name %>" <%= category === c.name ? 'selected' : '' %>><%= c.icon %> <%= c.name %></option>
         <% }); %>
       </select>
       <select name="sort" class="bg-dark-700 border border-dark-600 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-brand-500 transition">
-        <option value="latest" <%= sort === 'latest' ? 'selected' : %>>الأحدث</option>
-        <option value="oldest" <%= sort === 'oldest' ? 'selected' : %>>الأقدم</option>
-        <option value="views" <%= sort === 'views' ? 'selected' : %>>الأكثر مشاهدة</option>
+        <option value="latest" <%= sort === 'latest' ? 'selected' : '' %>>الأحدث</option>
+        <option value="oldest" <%= sort === 'oldest' ? 'selected' : '' %>>الأقدم</option>
+        <option value="views" <%= sort === 'views' ? 'selected' : '' %>>الأكثر مشاهدة</option>
       </select>
       <% if (q || category) { %>
         <a href="/search" class="text-sm text-gray-400 hover:text-gray-300 transition flex items-center gap-1">✕ مسح الفلاتر</a>
