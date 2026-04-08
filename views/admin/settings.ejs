@@ -10,7 +10,7 @@
   </div>
 </div>
 
-<form method="POST" class="space-y-6 max-w-2xl">
+<form id="settingsForm" class="space-y-6 max-w-2xl">
 
   <!-- Site Info -->
   <div class="bg-white rounded-xl p-5 shadow-sm border">
@@ -232,8 +232,26 @@
     </div>
   </div>
 
-  <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-full font-bold transition">💾 حفظ الإعدادات</button>
+  <button type="button" onclick="saveSettings(this)" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-full font-bold transition">💾 حفظ الإعدادات</button>
 </form>
+
+<script>
+function saveSettings(btn) {
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري الحفظ...';
+  const params = new URLSearchParams(new FormData(document.getElementById('settingsForm')));
+  fetch('/admin/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params
+  }).then(r => {
+    if (r.ok) { alert('✅ تم حفظ الإعدادات'); window.location.reload(); }
+    else { alert('❌ حدث خطأ في الحفظ'); }
+  }).catch(() => alert('❌ خطأ في الاتصال'))
+  .finally(() => { btn.disabled = false; btn.textContent = orig; });
+}
+</script>
 
 <!-- Cache Status -->
 <div class="mt-8 bg-white rounded-xl p-5 shadow-sm border max-w-2xl">
