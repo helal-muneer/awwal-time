@@ -191,6 +191,7 @@ settings.run('show_stats_page', '0');
 settings.run('show_weekly_question', '1');
 settings.run('show_related_stories', '0');
 settings.run('show_search', '0');
+settings.run('comments_mode', 'open');
 
 // Theme definitions
 const THEMES = {
@@ -403,7 +404,7 @@ app.get('/story/:id', (req, res) => {
   db.prepare('UPDATE site_stats SET value = value + 1 WHERE key = ?').run('total_views');
   story.views++;
 
-  const comments = db.prepare('SELECT * FROM comments WHERE story_id = ? AND approved = 1 ORDER BY created_at DESC').all(story.id);
+  const comments = db.prepare('SELECT * FROM comments WHERE story_id = ? AND approved = 1 AND parent_id IS NULL ORDER BY created_at DESC').all(story.id);
   // Attach votes to comments
   comments.forEach(c => {
     const voteRow = db.prepare('SELECT SUM(vote_type) as total FROM votes WHERE comment_id = ?').get(c.id);
@@ -702,6 +703,10 @@ app.post('/admin/settings', requireSuper, (req, res) => {
   ['show_categories','show_advanced_submit','show_separate_regrets','show_leaderboard','show_compare','show_stats_page','show_weekly_question','show_related_stories','show_search'].forEach(key => {
     db.prepare("UPDATE site_settings SET value = ? WHERE key = ?").run(req.body[key] === 'on' ? '1' : '0', key);
   });
+  // Comments mode
+  if (req.body.comments_mode) {
+    db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('comments_mode', ?)").run(req.body.comments_mode);
+  }
   logWithAudit(req, 'تحديث الإعدادات', 'تم تحديث إعدادات الموقع');
   res.redirect('/admin/settings');
 });
@@ -936,10 +941,13 @@ app.post('/admin/emails/delete/:id', requireModerator, (req, res) => {
 
 // Comments (with reply support)
 app.post('/story/:id/comment', (req, res) => {
+  const commentsMode = getSetting('comments_mode');
+  if (commentsMode === 'disabled') return res.json({ error: 'التعليقات معطلة حالياً' });
   const { name, email, comment, parent_id } = req.body;
   if (!name || !comment) return res.json({ error: 'الاسم والتعليق مطلوبان' });
   const userId = getUserId(req, res);
-  db.prepare('INSERT INTO comments (story_id, name, email, comment, parent_id, user_id) VALUES (?, ?, ?, ?, ?, ?)').run(req.params.id, name, email || null, comment, parent_id || null, userId);
+  const approved = commentsMode === 'open' ? 1 : 0;
+  db.prepare('INSERT INTO comments (story_id, name, email, comment, parent_id, user_id, approved) VALUES (?, ?, ?, ?, ?, ?, ?)').run(req.params.id, name, email || null, comment, parent_id || null, userId, approved);
   invalidateCache('homepage');
   fireWebhook('comment.added', { storyId: parseInt(req.params.id), commentName: name });
   res.json({ ok: true });
