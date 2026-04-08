@@ -192,6 +192,7 @@ settings.run('show_weekly_question', '1');
 settings.run('show_related_stories', '0');
 settings.run('show_search', '0');
 settings.run('comments_mode', 'open');
+settings.run('date_format', 'gregorian');
 
 // Theme definitions
 const THEMES = {
@@ -210,6 +211,7 @@ app.use((req, res, next) => {
   res.locals.themeKey = themeKey;
   res.locals.allThemes = THEMES;
   res.locals.features = getFeatureSettings();
+  res.locals.dateFormat = getSetting('date_format') || 'gregorian';
   next();
 });
 
@@ -678,6 +680,7 @@ app.get('/admin/settings', requireSuper, (req, res) => {
     allCategories: ALL_CATEGORIES(),
     cacheEntries: cache.stats(),
     commentsMode: getSetting('comments_mode') || 'open',
+    dateFormat: getSetting('date_format') || 'gregorian',
     title: 'الإعدادات - أول مرّة'
   });
 });
@@ -707,6 +710,9 @@ app.post('/admin/settings', requireSuper, (req, res) => {
   // Comments mode
   if (req.body.comments_mode) {
     db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('comments_mode', ?)").run(req.body.comments_mode);
+  }
+  if (req.body.date_format) {
+    db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('date_format', ?)").run(req.body.date_format);
   }
   logWithAudit(req, 'تحديث الإعدادات', 'تم تحديث إعدادات الموقع');
   res.redirect('/admin/settings');

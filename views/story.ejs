@@ -51,7 +51,7 @@
   <!-- Header -->
   <div class="text-center mb-8">
     <div class="inline-flex items-center gap-2 bg-dark-800/60 border border-dark-700/40 rounded-full px-4 py-1.5 text-xs text-gray-400 mb-4">
-      <span>📅 <%= new Date(story.created_at).toLocaleDateString('ar-SA', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) %></span>
+      <span>📅 <%= new Date(story.created_at).toLocaleDateString(dateFormat === 'hijri' ? 'ar-SA' : 'ar-EG', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) %></span>
       <% if (story.category) { %>
         <span>•</span>
         <a href="/?category=<%= encodeURIComponent(story.category) %>" class="text-brand-400 hover:text-brand-300"><%= story.category %></a>
@@ -199,7 +199,7 @@
             <div class="w-8 h-8 bg-dark-600 rounded-full flex items-center justify-center text-sm">👤</div>
             <div class="flex-1">
               <span class="font-semibold text-sm"><%= c.name %></span>
-              <span class="text-xs text-gray-500 mr-2"><%= new Date(c.created_at).toLocaleDateString('ar-SA') %></span>
+              <span class="text-xs text-gray-500 mr-2"><%= new Date(c.created_at).toLocaleDateString(dateFormat === 'hijri' ? 'ar-SA' : 'ar-EG') %></span>
             </div>
             <!-- Vote buttons -->
             <div class="flex items-center gap-1">
@@ -221,7 +221,7 @@
                 <div class="w-6 h-6 bg-dark-600 rounded-full flex items-center justify-center text-xs">👤</div>
                 <div class="flex-1">
                   <span class="font-semibold text-xs"><%= r.name %></span>
-                  <span class="text-xs text-gray-500 mr-1"><%= new Date(r.created_at).toLocaleDateString('ar-SA') %></span>
+                  <span class="text-xs text-gray-500 mr-1"><%= new Date(r.created_at).toLocaleDateString(dateFormat === 'hijri' ? 'ar-SA' : 'ar-EG') %></span>
                 </div>
                 <div class="flex items-center gap-1">
                   <button onclick="voteComment(<%= r.id %>, 'up', this)" class="vote-btn text-xs px-1.5 py-0.5 rounded hover:bg-dark-600/50 transition" title="إعجاب">
@@ -256,7 +256,7 @@
             <div class="w-8 h-8 bg-dark-700/60 rounded-full flex items-center justify-center text-sm"><%= s.hide_name ? '👤' : '😊' %></div>
             <div class="flex-1 min-w-0">
               <div class="font-bold text-sm truncate"><%= s.hide_name ? 'مجهول' : s.name %></div>
-              <div class="text-xs text-gray-500"><%= new Date(s.created_at).toLocaleDateString('ar-SA') %></div>
+              <div class="text-xs text-gray-500"><%= new Date(s.created_at).toLocaleDateString(dateFormat === 'hijri' ? 'ar-SA' : 'ar-EG') %></div>
             </div>
           </div>
           <% if (rDone.length) { %>

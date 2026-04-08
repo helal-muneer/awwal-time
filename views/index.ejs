@@ -109,7 +109,7 @@
     <div class="flex items-center justify-between mt-4 pt-3 border-t border-dark-700/30">
       <div class="flex items-center gap-2">
         <span class="text-xs text-gray-500"><%= s.hide_name ? '👤 مجهول' : s.name %></span>
-        <span class="text-xs text-gray-600">· <%= new Date(s.created_at).toLocaleDateString('ar-SA') %></span>
+        <span class="text-xs text-gray-600">· <%= new Date(s.created_at).toLocaleDateString(dateFormat === 'hijri' ? 'ar-SA' : 'ar-EG') %></span></span>
       </div>
       <div class="flex items-center gap-2">
         <span class="text-xs text-gray-500">🫂 <%= s.reactions && s.reactions.relatable || 0 %></span>
