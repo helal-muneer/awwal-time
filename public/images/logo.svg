@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 180" width="600" height="180">
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="35%" stop-color="#ec4899"/>
+      <stop offset="70%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+    <linearGradient id="subGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#f472b6"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Main text -->
+  <text x="300" y="110" text-anchor="middle" font-family="Arial, Tahoma, sans-serif" font-size="100" font-weight="bold" fill="url(#logoGrad)" filter="url(#glow)">أول مرّة</text>
+
+  <!-- Subtle underline accent -->
+  <line x1="140" y1="130" x2="460" y2="130" stroke="url(#subGrad)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Tagline -->
+  <text x="300" y="162" text-anchor="middle" font-family="Arial, Tahoma, sans-serif" font-size="22" fill="url(#subGrad)" opacity="0.8">شارك تجربتك الأولى</text>
+</svg>

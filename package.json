@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:css": "tailwindcss --input public/css/input.css --output public/css/tailwind.css --content \"views/**/*.ejs\" --minify"
   },
   "keywords": [],
   "author": "",
@@ -21,5 +22,9 @@
     "multer": "^2.1.1",
     "nodemailer": "^8.0.4",
     "pdfkit": "^0.18.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.2",
+    "tailwindcss": "^4.2.2"
   }
 }

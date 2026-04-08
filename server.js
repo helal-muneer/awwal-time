@@ -179,6 +179,7 @@ const settings = db.prepare('INSERT OR IGNORE INTO site_settings (key, value) VA
 settings.run('require_approval', '1');
 settings.run('adsense_header', '');
 settings.run('adsense_footer', '');
+settings.run('custom_head_code', '');
 settings.run('weekly_question', '');
 settings.run('active_theme', 'red');
 settings.run('show_categories', '0');
@@ -189,6 +190,7 @@ settings.run('show_compare', '0');
 settings.run('show_stats_page', '0');
 settings.run('show_weekly_question', '1');
 settings.run('show_related_stories', '0');
+settings.run('show_search', '0');
 
 // Theme definitions
 const THEMES = {
@@ -216,7 +218,7 @@ function getSetting(key) {
 }
 
 function getFeatureSettings() {
-  const keys = ['show_categories','show_advanced_submit','show_separate_regrets','show_leaderboard','show_compare','show_stats_page','show_weekly_question','show_related_stories'];
+  const keys = ['show_categories','show_advanced_submit','show_separate_regrets','show_leaderboard','show_compare','show_stats_page','show_weekly_question','show_related_stories','show_search'];
   const f = {};
   keys.forEach(k => { f[k] = getSetting(k) === '1'; });
   return f;
@@ -283,16 +285,35 @@ function logWithAudit(req, action, details) {
 
 // ============ PUBLIC ROUTES ============
 
-const CATEGORIES = [
-  { name: 'علاقات', icon: '❤️', color: 'pink' },
-  { name: 'دراسة', icon: '📚', color: 'blue' },
-  { name: 'عمل', icon: '💼', color: 'amber' },
-  { name: 'صحة', icon: '🏥', color: 'green' },
-  { name: 'سفر', icon: '✈️', color: 'sky' },
-  { name: 'مال', icon: '💰', color: 'yellow' },
-  { name: 'عائلة', icon: '👨‍👩‍👧‍👦', color: 'purple' },
-  { name: 'شخصي', icon: '🌟', color: 'brand' }
-];
+// Dynamic categories from DB
+function getCategories() {
+  return db.prepare('SELECT * FROM categories ORDER BY sort_order ASC, id ASC').all();
+}
+
+// Initialize default categories if table is empty
+function initCategories() {
+  const defaults = [
+    { name: 'علاقات', icon: '❤️', color: 'pink' },
+    { name: 'دراسة', icon: '📚', color: 'blue' },
+    { name: 'عمل', icon: '💼', color: 'amber' },
+    { name: 'صحة', icon: '🏥', color: 'green' },
+    { name: 'سفر', icon: '✈️', color: 'sky' },
+    { name: 'مال', icon: '💰', color: 'yellow' },
+    { name: 'عائلة', icon: '👨‍👩‍👧‍👦', color: 'purple' },
+    { name: 'شخصي', icon: '🌟', color: 'brand' }
+  ];
+  const existing = db.prepare('SELECT COUNT(*) as c FROM categories').get();
+  if (existing.c === 0) {
+    const stmt = db.prepare('INSERT INTO categories (name, icon, color, active, sort_order) VALUES (?, ?, ?, 1, ?)');
+    defaults.forEach((d, i) => stmt.run(d.name, d.icon, d.color, i));
+  }
+}
+
+try { db.exec('CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL, icon TEXT DEFAULT \"🌟\", color TEXT DEFAULT \"brand\", active INTEGER DEFAULT 1, sort_order INTEGER DEFAULT 0)'); } catch(e) {}
+initCategories();
+
+function CATEGORIES() { return getCategories().filter(c => c.active); }
+function ALL_CATEGORIES() { return getCategories(); }
 
 // Home
 app.get('/', (req, res) => {
@@ -318,11 +339,11 @@ app.get('/', (req, res) => {
 
   let order = 'ORDER BY s.created_at DESC';
   if (sort === 'views') order = 'ORDER BY s.views DESC';
-  else if (sort === 'reacts') order = 'ORDER BY s.total_reacts DESC';
+  else if (sort === 'reacts') order = 'ORDER BY total_reacts DESC';
   else if (sort === 'random') order = 'ORDER BY RANDOM()';
 
   const stories = db.prepare(`
-    SELECT s.*, (SELECT SUM(r.count) FROM reactions r WHERE r.story_id = s.id) as total_reacts
+    SELECT s.*, (SELECT COALESCE(SUM(r.count),0) FROM reactions r WHERE r.story_id = s.id) as total_reacts
     FROM stories s ${where} ${order} LIMIT ? OFFSET ?
   `).all(...params, perPage, offset);
 
@@ -349,12 +370,12 @@ app.get('/', (req, res) => {
 
   // Category counts
   const categoryCounts = {};
-  CATEGORIES.forEach(c => {
+  CATEGORIES().forEach(c => {
     categoryCounts[c.name] = db.prepare('SELECT COUNT(*) as count FROM stories WHERE approved = 1 AND category = ?').get(c.name).count;
   });
 
   res.render('index', {
-    stories, categories: CATEGORIES, categoryCounts,
+    stories, categories: CATEGORIES(), categoryCounts,
     totalViews: totalStats?.value || 0,
     totalStories: submissionCount.count,
     totalReactions: totalReactions?.total || 0,
@@ -363,6 +384,7 @@ app.get('/', (req, res) => {
     sort, category, search,
     adsenseHeader: getSetting('adsense_header'),
     adsenseFooter: getSetting('adsense_footer'),
+    customHeadCode: getSetting('custom_head_code'),
     weeklyQuestion: getSetting('weekly_question'),
     title: 'أول مرّة - تجارب الناس',
     description: 'شارك تجربتك - أشياء ندمت عليها وأشياء تمنيت لو فعلتها'
@@ -438,7 +460,7 @@ app.get('/submit', (req, res) => {
   res.render('submit', {
     title: 'شارك تجربتك - أول مرّة',
     description: 'شاركنا أشياء ندمت عليها وأشياء تمنيت لو فعلتها',
-    categories: CATEGORIES
+    categories: CATEGORIES()
   });
 });
 app.use((req, res, next) => {
@@ -471,14 +493,14 @@ app.post('/submit', upload.single('image'), (req, res) => {
       if (req.xhr || req.headers.accept === 'application/json') {
         return res.status(400).json({ error: 'يرجى ملء الحقول المطلوبة' });
       }
-      return res.render('submit', { error: 'يرجى ملء الحقول المطلوبة', title: 'شارك تجربتك', categories: CATEGORIES });
+      return res.render('submit', { error: 'يرجى ملء الحقول المطلوبة', title: 'شارك تجربتك', categories: CATEGORIES() });
     }
   } else {
     if (!name || (!done_regrets && !notdone_regrets)) {
       if (req.xhr || req.headers.accept === 'application/json') {
         return res.status(400).json({ error: 'يرجى ملء الحقول المطلوبة' });
       }
-      return res.render('submit', { error: 'يرجى ملء الحقول المطلوبة', title: 'شارك تجربتك', categories: CATEGORIES });
+      return res.render('submit', { error: 'يرجى ملء الحقول المطلوبة', title: 'شارك تجربتك', categories: CATEGORIES() });
     }
   }
 
@@ -650,7 +672,9 @@ app.get('/admin/settings', requireSuper, (req, res) => {
     mailPass: getSetting('mail_pass'),
     mailFrom: getSetting('mail_from'),
     weeklyQuestion: getSetting('weekly_question'),
+    customHeadCode: getSetting('custom_head_code'),
     features: getFeatureSettings(),
+    allCategories: ALL_CATEGORIES(),
     cacheEntries: cache.stats(),
     title: 'الإعدادات - أول مرّة'
   });
@@ -664,6 +688,7 @@ app.post('/admin/settings', requireSuper, (req, res) => {
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'require_approval'").run(require_approval === 'on' ? '1' : '0');
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'adsense_header'").run(adsense_header || '');
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'adsense_footer'").run(adsense_footer || '');
+  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'custom_head_code'").run(req.body.custom_head_code || '');
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'site_name'").run(site_name || 'أول مرّة');
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'site_description'").run(site_description || '');
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'email_enabled'").run(email_enabled === 'on' ? '1' : '0');
@@ -674,14 +699,41 @@ app.post('/admin/settings', requireSuper, (req, res) => {
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'mail_from'").run(mail_from || '');
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'weekly_question'").run(weekly_question || '');
   // Feature toggles
-  ['show_categories','show_advanced_submit','show_separate_regrets','show_leaderboard','show_compare','show_stats_page','show_weekly_question','show_related_stories'].forEach(key => {
+  ['show_categories','show_advanced_submit','show_separate_regrets','show_leaderboard','show_compare','show_stats_page','show_weekly_question','show_related_stories','show_search'].forEach(key => {
     db.prepare("UPDATE site_settings SET value = ? WHERE key = ?").run(req.body[key] === 'on' ? '1' : '0', key);
   });
   logWithAudit(req, 'تحديث الإعدادات', 'تم تحديث إعدادات الموقع');
   res.redirect('/admin/settings');
 });
 
-// 3. Approve/Delete story
+// Category management API
+app.post('/admin/categories/add', requireSuper, (req, res) => {
+  const { name, icon, color } = req.body;
+  if (!name || !name.trim()) return res.redirect('/admin/settings');
+  try {
+    const maxSort = db.prepare('SELECT COALESCE(MAX(sort_order),-1) + 1 as next FROM categories').get();
+    db.prepare('INSERT INTO categories (name, icon, color, active, sort_order) VALUES (?, ?, ?, 1, ?)').run(name.trim(), icon || '🌟', color || 'brand', maxSort.next);
+    logWithAudit(req, 'إضافة تصنيف', `تمت إضافة التصنيف: ${name}`);
+  } catch(e) { /* duplicate name */ }
+  res.redirect('/admin/settings');
+});
+
+app.post('/admin/categories/toggle/:id', requireSuper, (req, res) => {
+  db.prepare('UPDATE categories SET active = NOT active WHERE id = ?').run(req.params.id);
+  logWithAudit(req, 'تبديل تصنيف', `تم تبديل حالة التصنيف #${req.params.id}`);
+  res.redirect('/admin/settings');
+});
+
+app.post('/admin/categories/delete/:id', requireSuper, (req, res) => {
+  const cat = db.prepare('SELECT name FROM categories WHERE id = ?').get(req.params.id);
+  if (cat) {
+    // Move stories to 'شخصي' before deleting
+    db.prepare('UPDATE stories SET category = ? WHERE category = ?').run('شخصي', cat.name);
+    db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
+    logWithAudit(req, 'حذف تصنيف', `تم حذف التصنيف: ${cat.name}`);
+  }
+  res.redirect('/admin/settings');
+});
 app.post('/admin/story/:id/approve', requireModerator, (req, res) => {
   db.prepare('UPDATE stories SET approved = 1 WHERE id = ?').run(req.params.id);
   const story = db.prepare('SELECT * FROM stories WHERE id = ?').get(req.params.id);
@@ -711,7 +763,7 @@ app.get('/admin/stats', requireAuth, (req, res) => {
 
   const dailyStats = db.prepare(`SELECT DATE(created_at) as date, COUNT(*) as count FROM stories GROUP BY DATE(created_at) ORDER BY date DESC LIMIT 30`).all().reverse();
   const dailyViews = db.prepare(`SELECT DATE(created_at) as date, SUM(views) as total FROM stories WHERE approved = 1 GROUP BY DATE(created_at) ORDER BY date DESC LIMIT 30`).all().reverse();
-  const categoryDist = CATEGORIES.map(c => ({ name: c.name, icon: c.icon, count: db.prepare('SELECT COUNT(*) as count FROM stories WHERE approved = 1 AND category = ?').get(c.name).count }));
+  const categoryDist = CATEGORIES().map(c => ({ name: c.name, icon: c.icon, count: db.prepare('SELECT COUNT(*) as count FROM stories WHERE approved = 1 AND category = ?').get(c.name).count }));
   const emailSources = db.prepare('SELECT source, COUNT(*) as count FROM emails GROUP BY source').all();
   const allDone = db.prepare("SELECT done_regrets FROM stories WHERE approved = 1 AND done_regrets != ''").all();
   const allNotDone = db.prepare("SELECT notdone_regrets FROM stories WHERE approved = 1 AND notdone_regrets != ''").all();
@@ -1042,7 +1094,7 @@ app.get('/sitemap.xml', (req, res) => {
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
   const staticPages = ['','/submit','/privacy','/contact','/leaderboard','/my-stats','/best'];
   staticPages.forEach(p => { xml += `\n<url><loc>${baseUrl}${p}</loc><priority>${p===''?'1.0':'0.7'}</priority></url>`; });
-  CATEGORIES.forEach(c => {
+  CATEGORIES().forEach(c => {
     const slug = encodeURIComponent(c.name);
     xml += `\n<url><loc>${baseUrl}/category/${slug}</loc><priority>0.8</priority></url>`;
   });
@@ -1054,7 +1106,7 @@ app.get('/sitemap.xml', (req, res) => {
 
 // 9. Category Pages
 const CATEGORY_SLUGS = {};
-CATEGORIES.forEach(c => { CATEGORY_SLUGS[c.name] = c; });
+CATEGORIES().forEach(c => { CATEGORY_SLUGS[c.name] = c; });
 
 app.get('/category/:slug', (req, res) => {
   const catName = decodeURIComponent(req.params.slug);
@@ -1206,7 +1258,7 @@ app.get('/search', (req, res) => {
   }
 
   res.render('search', {
-    stories, categories: CATEGORIES, q, category, sort,
+    stories, categories: CATEGORIES(), q, category, sort,
     highlight, totalCount, currentPage: page, totalPages,
     title: q ? `نتائج البحث عن "${q}" - أول مرّة` : 'البحث - أول مرّة',
     description: 'ابحث في تجارب الناس على أول مرّة'
@@ -1480,7 +1532,7 @@ app.get('/api/stories/:id', rateLimit, (req, res) => {
 });
 
 app.get('/api/categories', rateLimit, (req, res) => {
-  const cats = CATEGORIES.map(c => ({
+  const cats = CATEGORIES().map(c => ({
     name: c.name, icon: c.icon,
     count: db.prepare('SELECT COUNT(*) as count FROM stories WHERE approved = 1 AND category = ?').get(c.name).count
   }));
@@ -1561,7 +1613,7 @@ app.get('/stats', (req, res) => {
   const topNotDone = Object.entries(notDoneCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
 
   // Category distribution
-  const catDist = CATEGORIES.map(c => ({
+  const catDist = CATEGORIES().map(c => ({
     name: c.name, icon: c.icon,
     count: db.prepare('SELECT COUNT(*) as c FROM stories WHERE approved = 1 AND category = ?').get(c.name).c
   })).sort((a,b)=>b.count-a.count);

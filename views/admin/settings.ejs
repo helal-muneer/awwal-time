@@ -102,6 +102,13 @@
           <div class="text-sm text-gray-500">عرض "تجارب مشابهة" في صفحة التفاصيل</div>
         </div>
       </label>
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="show_search" <%= features.show_search ? 'checked' : '' %> class="w-5 h-5 accent-orange-600">
+        <div>
+          <div class="font-bold">البحث</div>
+          <div class="text-sm text-gray-500">عرض شريط البحث في الهيدر</div>
+        </div>
+      </label>
     </div>
   </div>
 
@@ -132,6 +139,18 @@
           class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500"
           placeholder="ضع كود AdSense هنا..."><%= adsenseFooter %></textarea>
       </div>
+    </div>
+  </div>
+
+  <!-- Custom Head Code -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-4">🔧 أكواد مخصصة (Head)</h3>
+    <div class="space-y-3">
+      <p class="text-sm text-gray-500">أضف أي كود HTML/CSS/JS ليُحقن داخل <code>&lt;head&gt;</code> في كل الصفحات (مثل: analytics، meta tags، scripts)</p>
+      <textarea name="custom_head_code" rows="6" dir="ltr"
+        class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500"
+        placeholder="<!-- Google Analytics -->
+<script>...</script>"><%= customHeadCode %></textarea>
     </div>
   </div>
 
@@ -166,6 +185,50 @@
         <label class="block text-sm font-bold mb-1">بريد المرسل</label>
         <input type="text" name="mail_from" value="<%= mailFrom %>" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
       </div>
+    </div>
+  </div>
+
+  <!-- Categories Management -->
+  <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <h3 class="font-bold mb-4">📂 إدارة التصنيفات</h3>
+    
+    <!-- Add new category -->
+    <form method="POST" action="/admin/categories/add" class="flex items-end gap-3 mb-4 pb-4 border-b">
+      <div class="flex-1">
+        <label class="block text-sm font-bold mb-1">اسم التصنيف</label>
+        <input type="text" name="name" required class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="مثال: تقنية">
+      </div>
+      <div class="w-20">
+        <label class="block text-sm font-bold mb-1">أيقونة</label>
+        <input type="text" name="icon" value="🌟" class="w-full border rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-500">
+      </div>
+      <div class="w-24">
+        <label class="block text-sm font-bold mb-1">لون</label>
+        <input type="text" name="color" value="brand" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="blue">
+      </div>
+      <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition whitespace-nowrap">➕ إضافة</button>
+    </form>
+
+    <!-- Existing categories -->
+    <div class="space-y-2">
+      <% allCategories.forEach(cat => { %>
+      <div class="flex items-center gap-3 p-2 rounded-lg <%= cat.active ? 'bg-gray-50' : 'bg-red-50 opacity-60' %>">
+        <span class="text-xl"><%= cat.icon %></span>
+        <span class="font-bold text-sm flex-1"><%= cat.name %></span>
+        <span class="text-xs text-gray-400">ترتيب: <%= cat.sort_order %></span>
+        <span class="text-xs px-2 py-0.5 rounded-full <%= cat.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' %>"">
+          <%= cat.active ? '✅ مفعل' : '⏸️ متوقف' %>
+        </span>
+        <form method="POST" action="/admin/categories/toggle/<%= cat.id %>" class="inline">
+          <button type="submit" class="text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 transition" title="<%= cat.active ? 'إيقاف' : 'تفعيل' %>">
+            <%= cat.active ? '⏸️' : '▶️' %>
+          </button>
+        </form>
+        <form method="POST" action="/admin/categories/delete/<%= cat.id %>" class="inline" onsubmit="return confirm('حذف <%= cat.name %>؟ سيتم نقل التجارب الى شخصي')">
+          <button type="submit" class="text-xs px-2 py-1 rounded bg-red-100 text-red-600 hover:bg-red-200 transition" title="حذف">🗑️</button>
+        </form>
+      </div>
+      <% }) %>
     </div>
   </div>
 

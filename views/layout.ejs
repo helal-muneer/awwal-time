@@ -12,7 +12,10 @@
   <% if (typeof canonical !== 'undefined') { %><link rel="canonical" href="<%= canonical %>"><% } %>
   <link rel="alternate" type="application/rss+xml" title="أول مرّة" href="/rss">
   <% if (typeof ogImage !== 'undefined') { %><meta property="og:image" content="<%= ogImage %>"><% } %>
-  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <meta name="twitter:card" content="summary_large_image">
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
@@ -20,7 +23,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="أول مرّة">
-  <link rel="apple-touch-icon" href="/icons/icon-192.svg">
   <!-- SEO -->
   <link rel="alternate" hreflang="ar" href="<%= typeof canonical !== 'undefined' ? canonical : 'https://awwal-time.ksawats.com' %>">
   <script type="application/ld+json">
@@ -48,20 +50,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['IBM Plex Sans Arabic', 'sans-serif'] },
-          colors: {
-            brand: { 50:'#fef3f2', 100:'#fee2e1', 200:'#fecaca', 300:'#fca5a5', 400:'#f87171', 500:'#ef4444', 600:'#dc2626', 700:'#b91c1c', 800:'#991b1b', 900:'#7f1d1d' },
-            dark: { 50:'#f8fafc', 100:'#f1f5f9', 200:'#e2e8f0', 300:'#cbd5e1', 400:'#94a3b8', 500:'#64748b', 600:'#475569', 700:'#334155', 800:'#1e293b', 900:'#0f172a', 950:'#020617' }
-          }
-        }
-      }
-    }
-  </script>
+  <link rel="stylesheet" href="/css/tailwind.css">
   <style>
     :root {
       --primary: <%= typeof theme !== 'undefined' ? theme.primary : '#dc2626' %>;
@@ -262,6 +251,9 @@
     img.lazy-img { opacity: 0; transition: opacity 0.4s ease; }
     img.lazy-img.loaded { opacity: 1; }
   </style>
+  <% if (typeof customHeadCode !== 'undefined' && customHeadCode) { %>
+  <%- customHeadCode %>
+  <% } %>
 </head>
 <body class="bg-dark-950 text-gray-100 min-h-screen" data-theme="light">
 
@@ -273,22 +265,25 @@
 
   <!-- Nav -->
   <nav class="sticky top-0 z-50 bg-dark-950/80 backdrop-blur-xl border-b border-dark-800/60">
-    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
-      <a href="/" class="flex items-center gap-2 text-xl font-bold flex-shrink-0">
-        <span style="color: var(--primary); font-size: 1.5rem;">🦞</span>
-        <span>أول مرّة</span>
+    <div class="max-w-4xl lg:max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <a href="/" class="flex-shrink-0">
+        <svg class="h-8 w-auto" viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="hLG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a855f7"/><stop offset="35%" stop-color="#ec4899"/><stop offset="70%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#ef4444"/></linearGradient></defs><text x="300" y="120" text-anchor="middle" font-family="Arial,Tahoma,sans-serif" font-size="120" font-weight="bold" fill="url(#hLG)">أول مرّة</text></svg>
       </a>
+      <% if (typeof features !== 'undefined' && features.show_search) { %>
       <form action="/" method="GET" class="flex-1 max-w-xs">
         <input type="text" name="q" value="<%= typeof search !== 'undefined' ? search : '' %>" placeholder="🔍 ابحث..." class="w-full bg-dark-800/60 border border-dark-700/40 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-brand-500/50 transition placeholder-gray-500">
       </form>
-      <a href="/favorites" class="text-gray-400 hover:text-gray-200 px-3 py-2.5 rounded-full text-sm font-bold transition flex-shrink-0" title="المفضلة" id="favNavLink">❤️</a>
-      <button onclick="toggleTheme()" id="themeToggle" class="w-9 h-9 flex items-center justify-center rounded-full bg-dark-800/60 border border-dark-700/40 hover:bg-dark-700/60 transition text-lg" title="تبديل المظهر">🌙</button>
-      <% if (typeof features !== 'undefined' && features.show_leaderboard) { %>
-      <a href="/leaderboard" class="text-gray-400 hover:text-gray-200 px-2 py-1 text-sm transition" title="المتصدرين">🏆</a>
       <% } %>
-      <% if (typeof features !== 'undefined' && features.show_stats_page) { %>
-      <a href="/my-stats" class="text-gray-400 hover:text-gray-200 px-2 py-1 text-sm transition" title="إحصائياتي">📊</a>
-      <% } %>
+      <div class="flex items-center gap-1">
+        <a href="/favorites" class="text-gray-400 hover:text-gray-200 px-3 py-2.5 rounded-full text-sm font-bold transition flex-shrink-0" title="المفضلة" id="favNavLink">❤️</a>
+        <button onclick="toggleTheme()" id="themeToggle" class="w-9 h-9 flex items-center justify-center rounded-full bg-dark-800/60 border border-dark-700/40 hover:bg-dark-700/60 transition text-lg" title="تبديل المظهر">🌙</button>
+        <% if (typeof features !== 'undefined' && features.show_leaderboard) { %>
+        <a href="/leaderboard" class="text-gray-400 hover:text-gray-200 px-2 py-1 text-sm transition" title="المتصدرين">🏆</a>
+        <% } %>
+        <% if (typeof features !== 'undefined' && features.show_stats_page) { %>
+        <a href="/my-stats" class="text-gray-400 hover:text-gray-200 px-2 py-1 text-sm transition" title="إحصائياتي">📊</a>
+        <% } %>
+      </div>
     </div>
   </nav>
 
@@ -313,7 +308,7 @@
     <% } %>
   </div>
 
-  <main class="max-w-4xl mx-auto px-4 py-8"><%- body %></main>
+  <main class="max-w-4xl lg:max-w-7xl mx-auto px-4 py-8"><%- body %></main>
 
   <!-- Footer -->
   <footer class="border-t border-dark-800/60 mt-16 py-8">
