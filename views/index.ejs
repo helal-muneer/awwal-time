@@ -227,16 +227,16 @@ document.getElementById('modalSubmitForm').addEventListener('submit', function(e
   const notdone1 = form.notdone1 ? form.notdone1.value.trim() : '';
   const isAdvanced = done1 || notdone1;
 
-  const formData = new FormData(form);
+  const params = new URLSearchParams(new FormData(form));
   if (isAdvanced) {
-    formData.set('simple_mode', '0');
-    formData.set('comment', text);
+    params.set('simple_mode', '0');
+    params.set('comment', text);
   }
 
   fetch('/submit', {
     method: 'POST',
-    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-    body: formData
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params
   })
   .then(async r => {
     const text = await r.text();
