@@ -52,6 +52,14 @@
         <option value="disabled" <%= commentsMode === 'disabled' ? 'selected' : '' %>>🚫 إيقاف التعليقات</option>
       </select>
     </label>
+    <div class="mt-4">
+      <label class="block text-sm font-bold mb-1">🚨 إخفاء تلقائي بعد عدد البلاغات</label>
+      <div class="flex items-center gap-3">
+        <input type="number" name="auto_hide_reports" min="0" max="100" value="<%= autoHideReports %>" class="w-24 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+        <span class="text-sm text-gray-500">بلاغ (0 = إيقاف الإخفاء التلقائي)</span>
+      </div>
+      <p class="text-xs text-gray-400 mt-1">المشاركات والتعليقات تُخفى تلقائياً عند الوصول لهذا العدد من البلاغات</p>
+    </div>
   </div>
 
   <!-- Feature Toggles -->

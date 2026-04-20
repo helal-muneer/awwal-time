@@ -218,6 +218,7 @@ settings.run('show_search', '0');
 settings.run('comments_mode', 'open');
 settings.run('date_format', 'gregorian');
 settings.run('allow_image_upload', '0');
+settings.run('auto_hide_reports', '5');
 
 // Theme definitions
 const THEMES = {
@@ -733,6 +734,7 @@ app.get('/admin/settings', requireSuper, (req, res) => {
     allCategories: ALL_CATEGORIES(),
     cacheEntries: cache.stats(),
     commentsMode: getSetting('comments_mode') || 'open',
+    autoHideReports: getSetting('auto_hide_reports') || '5',
     dateFormat: getSetting('date_format') || 'gregorian',
     title: 'الإعدادات - أول مرّة'
   });
@@ -764,6 +766,8 @@ app.post('/admin/settings', requireSuper, (req, res) => {
   if (req.body.comments_mode) {
     db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('comments_mode', ?)").run(req.body.comments_mode);
   }
+  // Auto-hide reports threshold
+  db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('auto_hide_reports', ?)").run(String(parseInt(req.body.auto_hide_reports) || 0));
   if (req.body.date_format) {
     db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('date_format', ?)").run(req.body.date_format);
   }
@@ -1042,6 +1046,15 @@ app.post('/story/:id/report', userRateLimit(10, 60000), (req, res) => {
   const safeReason = sanitize(reason, 500) || 'غير محدد';
   db.prepare('INSERT INTO reports (story_id, reason) VALUES (?, ?)').run(req.params.id, safeReason);
   logActivity('إبلاغ عن تجربة', `رقم: ${req.params.id}، السبب: ${safeReason}`);
+  // Auto-hide if threshold reached
+  const threshold = parseInt(getSetting('auto_hide_reports')) || 0;
+  if (threshold > 0) {
+    const reportCount = db.prepare('SELECT COUNT(*) as c FROM reports WHERE story_id = ?').get(req.params.id).c;
+    if (reportCount >= threshold) {
+      db.prepare('UPDATE stories SET approved = 0 WHERE id = ?').run(req.params.id);
+      logActivity('إخفاء تلقائي', `تجربة #${req.params.id} أخفيت تلقائياً بعد ${reportCount} بلاغ`);
+    }
+  }
   res.json({ ok: true });
 });
 
@@ -1052,6 +1065,15 @@ app.post('/comment/:id/report', userRateLimit(10, 60000), (req, res) => {
   const safeStoryId = sanitize(story_id, 20);
   db.prepare('INSERT INTO reports (comment_id, story_id, reason) VALUES (?, ?, ?)').run(req.params.id, safeStoryId || null, safeReason);
   logActivity('إبلاغ عن تعليق', `رقم: ${req.params.id}`);
+  // Auto-hide comment if threshold reached
+  const threshold = parseInt(getSetting('auto_hide_reports')) || 0;
+  if (threshold > 0) {
+    const reportCount = db.prepare('SELECT COUNT(*) as c FROM reports WHERE comment_id = ?').get(req.params.id).c;
+    if (reportCount >= threshold) {
+      db.prepare('UPDATE comments SET approved = 0 WHERE id = ?').run(req.params.id);
+      logActivity('إخفاء تلقائي', `تعليق #${req.params.id} أخفي تلقائياً بعد ${reportCount} بلاغ`);
+    }
+  }
   res.json({ ok: true });
 });
 
