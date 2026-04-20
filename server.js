@@ -193,6 +193,7 @@ settings.run('show_related_stories', '0');
 settings.run('show_search', '0');
 settings.run('comments_mode', 'open');
 settings.run('date_format', 'gregorian');
+settings.run('allow_image_upload', '0');
 
 // Theme definitions
 const THEMES = {
@@ -221,7 +222,7 @@ function getSetting(key) {
 }
 
 function getFeatureSettings() {
-  const keys = ['show_categories','show_advanced_submit','show_separate_regrets','show_leaderboard','show_compare','show_stats_page','show_weekly_question','show_related_stories','show_search'];
+  const keys = ['show_categories','show_advanced_submit','show_separate_regrets','show_leaderboard','show_compare','show_stats_page','show_weekly_question','show_related_stories','show_search','allow_image_upload'];
   const f = {};
   keys.forEach(k => { f[k] = getSetting(k) === '1'; });
   return f;
@@ -385,6 +386,7 @@ app.get('/', (req, res) => {
     featured,
     currentPage: page, totalPages, hasMore,
     sort, category, search,
+    allowImageUpload: getSetting('allow_image_upload') === '1',
     adsenseHeader: getSetting('adsense_header'),
     adsenseFooter: getSetting('adsense_footer'),
     customHeadCode: getSetting('custom_head_code'),
@@ -463,7 +465,8 @@ app.get('/submit', (req, res) => {
   res.render('submit', {
     title: 'شارك تجربتك - أول مرّة',
     description: 'شاركنا أشياء ندمت عليها وأشياء تمنيت لو فعلتها',
-    categories: CATEGORIES()
+    categories: CATEGORIES(),
+    allowImageUpload: getSetting('allow_image_upload') === '1'
   });
 });
 app.use((req, res, next) => {
@@ -471,7 +474,13 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post('/submit', upload.single('image'), (req, res) => {
+app.post('/submit', (req, res, next) => {
+  if (getSetting('allow_image_upload') === '1') {
+    upload.single('image')(req, res, next);
+  } else {
+    next();
+  }
+}, (req, res) => {
   const { name, email, hide_name, category, done1, done2, done3, done4, done5,
           notdone1, notdone2, notdone3, notdone4, notdone5, comment, simple_mode, simple_text } = req.body;
 
@@ -507,7 +516,7 @@ app.post('/submit', upload.single('image'), (req, res) => {
     }
   }
 
-  const image_url = req.file ? 'uploads/' + req.file.filename : null;
+  const image_url = (getSetting('allow_image_upload') === '1' && req.file) ? 'uploads/' + req.file.filename : null;
   const userId = getUserId(req, res);
   const stmt = db.prepare(`
     INSERT INTO stories (name, hide_name, email, done_regrets, notdone_regrets, comment, category, user_id, image_url)
@@ -704,7 +713,7 @@ app.post('/admin/settings', requireSuper, (req, res) => {
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'mail_from'").run(mail_from || '');
   db.prepare("UPDATE site_settings SET value = ? WHERE key = 'weekly_question'").run(weekly_question || '');
   // Feature toggles
-  ['show_categories','show_advanced_submit','show_separate_regrets','show_leaderboard','show_compare','show_stats_page','show_weekly_question','show_related_stories','show_search'].forEach(key => {
+  ['show_categories','show_advanced_submit','show_separate_regrets','show_leaderboard','show_compare','show_stats_page','show_weekly_question','show_related_stories','show_search','allow_image_upload'].forEach(key => {
     db.prepare("UPDATE site_settings SET value = ? WHERE key = ?").run(req.body[key] === 'on' ? '1' : '0', key);
   });
   // Comments mode

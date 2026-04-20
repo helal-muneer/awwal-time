@@ -73,6 +73,7 @@
       </div>
 
       <!-- Image Upload -->
+      <% if (typeof allowImageUpload !== 'undefined' && allowImageUpload) { %>
       <div class="bg-dark-800/60 border border-dark-700/40 rounded-2xl p-6">
         <h2 class="font-bold text-sm flex items-center gap-2 mb-3">📷 صورة (اختياري)</h2>
         <input type="file" name="image" id="imageInput" accept="image/*" class="hidden" onchange="previewImage(this)">
@@ -85,6 +86,7 @@
           <button type="button" onclick="removeImage()" class="text-xs text-red-400 hover:text-red-300 mt-2 block mx-auto">✕ إزالة</button>
         </div>
       </div>
+      <% } %>
 
       <!-- Comment -->
       <div class="bg-dark-800/60 border border-dark-700/40 rounded-2xl p-6">
