@@ -161,6 +161,30 @@ const upload = multer({
 });
 try { db.exec('ALTER TABLE comments ADD COLUMN user_id TEXT'); } catch(e) {}
 
+// Sanitize input
+function sanitize(str, maxLen = 5000) {
+  if (typeof str !== 'string') return '';
+  return str.replace(/[\x00<>]/g, '').trim().substring(0, maxLen);
+}
+
+// Rate limiter for user actions (per IP)
+const userActionLimits = new Map();
+function userRateLimit(maxActions = 5, windowMs = 60000) {
+  return (req, res, next) => {
+    const ip = req.ip || req.connection.remoteAddress;
+    const now = Date.now();
+    const key = `${ip}:${req.path}`;
+    const entry = userActionLimits.get(key) || { count: 0, reset: now + windowMs };
+    if (now > entry.reset) { entry.count = 0; entry.reset = now + windowMs; }
+    entry.count++;
+    userActionLimits.set(key, entry);
+    if (entry.count > maxActions) {
+      return res.status(429).json({ error: 'طلبات كثيرة، حاول بعد دقيقة' });
+    }
+    next();
+  };
+}
+
 // Default admin
 const adminExists = db.prepare('SELECT id FROM admins').get();
 if (!adminExists) {
@@ -474,15 +498,26 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post('/submit', (req, res, next) => {
+app.post('/submit', userRateLimit(5, 300000), (req, res, next) => {
   if (getSetting('allow_image_upload') === '1') {
     upload.single('image')(req, res, next);
   } else {
     next();
   }
 }, (req, res) => {
-  const { name, email, hide_name, category, done1, done2, done3, done4, done5,
+  let { name, email, hide_name, category, done1, done2, done3, done4, done5,
           notdone1, notdone2, notdone3, notdone4, notdone5, comment, simple_mode, simple_text } = req.body;
+
+  // Sanitize all text inputs
+  name = sanitize(name, 100);
+  email = sanitize(email, 200);
+  category = sanitize(category, 50);
+  simple_text = sanitize(simple_text, 5000);
+  comment = sanitize(comment, 5000);
+  done1 = sanitize(done1, 500); done2 = sanitize(done2, 500); done3 = sanitize(done3, 500);
+  done4 = sanitize(done4, 500); done5 = sanitize(done5, 500);
+  notdone1 = sanitize(notdone1, 500); notdone2 = sanitize(notdone2, 500); notdone3 = sanitize(notdone3, 500);
+  notdone4 = sanitize(notdone4, 500); notdone5 = sanitize(notdone5, 500);
 
   let done_regrets, notdone_regrets, finalComment, finalCategory;
   
@@ -554,20 +589,29 @@ app.get('/contact', (req, res) => {
   res.render('contact', { title: 'تواصل معنا - أول مرّة' });
 });
 
-app.post('/contact', (req, res) => {
-  const { name, email, subject, message } = req.body;
+app.post('/contact', userRateLimit(3, 300000), (req, res) => {
+  let { name, email, subject, message } = req.body;
+  name = sanitize(name, 100);
+  email = sanitize(email, 200);
+  subject = sanitize(subject, 200);
+  message = sanitize(message, 5000);
   if (!name || !email || !message) {
     return res.render('contact', { error: 'يرجى ملء جميع الحقول المطلوبة', title: 'تواصل معنا - أول مرّة' });
   }
-  db.prepare('INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)').run(name, email, subject || '', message);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.render('contact', { error: 'البريد الإلكتروني غير صحيح', title: 'تواصل معنا - أول مرّة' });
+  }
+  db.prepare('INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)').run(name, email, subject, message);
   logActivity('رسالة تواصل', `من: ${name} (${email})`);
   res.render('contact', { success: 'تم إرسال رسالتك بنجاح! سنرد عليك في أقرب وقت.', title: 'تواصل معنا - أول مرّة' });
 });
 
 // Newsletter
-app.post('/newsletter', (req, res) => {
-  const { email } = req.body;
+app.post('/newsletter', userRateLimit(3, 300000), (req, res) => {
+  let { email } = req.body;
+  email = sanitize(email, 200);
   if (!email) return res.json({ error: 'الإيميل مطلوب' });
+  if (!/^\S+@\S+\.\S+$/.test(email)) return res.json({ error: 'البريد غير صحيح' });
   try {
     db.prepare('INSERT OR IGNORE INTO emails (email, source) VALUES (?, ?)').run(email, 'newsletter');
     res.json({ success: true });
@@ -956,11 +1000,15 @@ app.post('/admin/emails/delete/:id', requireModerator, (req, res) => {
 });
 
 // Comments (with reply support)
-app.post('/story/:id/comment', (req, res) => {
+app.post('/story/:id/comment', userRateLimit(10, 60000), (req, res) => {
   const commentsMode = getSetting('comments_mode');
   if (commentsMode === 'disabled') return res.json({ error: 'التعليقات معطلة حالياً' });
-  const { name, email, comment, parent_id } = req.body;
+  let { name, email, comment, parent_id } = req.body;
+  name = sanitize(name, 100);
+  email = sanitize(email, 200);
+  comment = sanitize(comment, 2000);
   if (!name || !comment) return res.json({ error: 'الاسم والتعليق مطلوبان' });
+  if (comment.length < 2) return res.json({ error: 'التعليق قصير جداً' });
   const userId = getUserId(req, res);
   const approved = commentsMode === 'open' ? 1 : 0;
   db.prepare('INSERT INTO comments (story_id, name, email, comment, parent_id, user_id, approved) VALUES (?, ?, ?, ?, ?, ?, ?)').run(req.params.id, name, email || null, comment, parent_id || null, userId, approved);
@@ -989,17 +1037,20 @@ app.post('/comment/:id/vote', (req, res) => {
 });
 
 // Report story
-app.post('/story/:id/report', (req, res) => {
+app.post('/story/:id/report', userRateLimit(10, 60000), (req, res) => {
   const { reason } = req.body;
-  db.prepare('INSERT INTO reports (story_id, reason) VALUES (?, ?)').run(req.params.id, reason || 'غير محدد');
-  logActivity('إبلاغ عن تجربة', `رقم: ${req.params.id}، السبب: ${reason || 'غير محدد'}`);
+  const safeReason = sanitize(reason, 500) || 'غير محدد';
+  db.prepare('INSERT INTO reports (story_id, reason) VALUES (?, ?)').run(req.params.id, safeReason);
+  logActivity('إبلاغ عن تجربة', `رقم: ${req.params.id}، السبب: ${safeReason}`);
   res.json({ ok: true });
 });
 
 // Report comment
-app.post('/comment/:id/report', (req, res) => {
+app.post('/comment/:id/report', userRateLimit(10, 60000), (req, res) => {
   const { reason, story_id } = req.body;
-  db.prepare('INSERT INTO reports (comment_id, story_id, reason) VALUES (?, ?, ?)').run(req.params.id, story_id || null, reason || 'غير محدد');
+  const safeReason = sanitize(reason, 500) || 'غير محدد';
+  const safeStoryId = sanitize(story_id, 20);
+  db.prepare('INSERT INTO reports (comment_id, story_id, reason) VALUES (?, ?, ?)').run(req.params.id, safeStoryId || null, safeReason);
   logActivity('إبلاغ عن تعليق', `رقم: ${req.params.id}`);
   res.json({ ok: true });
 });
