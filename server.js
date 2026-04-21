@@ -932,6 +932,16 @@ app.post('/admin/bulk', requireModerator, (req, res) => {
     logWithAudit(req, 'موافقة جماعية', `${idList.length} تجربة`);
   } else if (action === 'delete_all') {
     const placeholders = idList.map(() => '?').join(',');
+    // Delete related data first to avoid FK constraint errors
+    const comments = db.prepare(`SELECT id FROM comments WHERE story_id IN (${placeholders})`).all(...idList);
+    const commentIds = comments.map(c => c.id);
+    if (commentIds.length > 0) {
+      const cPlaceholders = commentIds.map(() => '?').join(',');
+      db.prepare(`DELETE FROM votes WHERE comment_id IN (${cPlaceholders})`).run(...commentIds);
+      db.prepare(`DELETE FROM reports WHERE comment_id IN (${cPlaceholders})`).run(...commentIds);
+    }
+    db.prepare(`DELETE FROM comments WHERE story_id IN (${placeholders})`).run(...idList);
+    db.prepare(`DELETE FROM reports WHERE story_id IN (${placeholders})`).run(...idList);
     db.prepare(`DELETE FROM stories WHERE id IN (${placeholders})`).run(...idList);
     logWithAudit(req, 'حذف جماعي', `${idList.length} تجربة`);
   }
