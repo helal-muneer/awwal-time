@@ -815,7 +815,19 @@ app.post('/admin/story/:id/approve', requireModerator, (req, res) => {
 
 app.post('/admin/story/:id/delete', requireModerator, (req, res) => {
   logWithAudit(req, 'حذف تجربة', `رقم: ${req.params.id}`);
-  db.prepare('DELETE FROM stories WHERE id = ?').run(req.params.id);
+  const storyId = req.params.id;
+  // Delete related data first to avoid FK constraint errors
+  const deleteComments = db.prepare('SELECT id FROM comments WHERE story_id = ?');
+  const commentIds = deleteComments.all(storyId).map(c => c.id);
+  if (commentIds.length > 0) {
+    const placeholders = commentIds.map(() => '?').join(',');
+    db.prepare(`DELETE FROM votes WHERE comment_id IN (${placeholders})`).run(...commentIds);
+    db.prepare(`DELETE FROM reports WHERE comment_id IN (${placeholders})`).run(...commentIds);
+  }
+  db.prepare('DELETE FROM comments WHERE story_id = ?').run(storyId);
+  db.prepare('DELETE FROM reports WHERE story_id = ?').run(storyId);
+  db.prepare('DELETE FROM stories WHERE id = ?').run(storyId);
+  invalidateCache('homepage');
   res.redirect('/admin');
 });
 
