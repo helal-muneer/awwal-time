@@ -1606,7 +1606,7 @@ function rateLimit(req, res, next) {
     return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
   }
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
@@ -1670,6 +1670,76 @@ app.get('/api/search', rateLimit, (req, res) => {
   `).all(term, term, term, term);
 
   res.json({ stories, total: stories.length, query: q });
+});
+
+// ============ API: Create Story ============
+app.post('/api/stories', rateLimit, userRateLimit(10, 300000), (req, res) => {
+  const { name, hide_name, category, done_regrets, notdone_regrets, comment, simple_mode, text } = req.body;
+
+  const sanitizedName = sanitize(name, 100);
+  const sanitizedCategory = sanitize(category, 50);
+  const sanitizedComment = sanitize(comment, 5000);
+  const sanitizedText = sanitize(text, 5000);
+
+  let finalDoneRegrets, finalNotDoneRegrets, finalComment, finalCategory;
+
+  if (simple_mode === true || simple_mode === '1' || simple_mode === 1) {
+    if (!sanitizedName || !sanitizedText) {
+      return res.status(400).json({ error: 'الاسم والنص مطلوبان', fields: ['name', 'text'] });
+    }
+    finalDoneRegrets = '';
+    finalNotDoneRegrets = '';
+    finalComment = sanitizedText;
+    finalCategory = 'شخصي';
+  } else {
+    // Detailed mode: done_regrets and notdone_regrets as arrays or |||-separated strings
+    let doneArr = [];
+    let notDoneArr = [];
+
+    if (Array.isArray(done_regrets)) {
+      doneArr = done_regrets.filter(Boolean).map(s => sanitize(String(s), 500));
+    } else if (typeof done_regrets === 'string' && done_regrets.trim()) {
+      doneArr = done_regrets.split('|||').map(s => sanitize(s.trim(), 500)).filter(Boolean);
+    }
+
+    if (Array.isArray(notdone_regrets)) {
+      notDoneArr = notdone_regrets.filter(Boolean).map(s => sanitize(String(s), 500));
+    } else if (typeof notdone_regrets === 'string' && notdone_regrets.trim()) {
+      notDoneArr = notdone_regrets.split('|||').map(s => sanitize(s.trim(), 500)).filter(Boolean);
+    }
+
+    if (!sanitizedName || (doneArr.length === 0 && notDoneArr.length === 0)) {
+      return res.status(400).json({ error: 'الاسم وتجربة واحدة على الأقل مطلوبة', fields: ['name', 'done_regrets or notdone_regrets'] });
+    }
+
+    finalDoneRegrets = doneArr.join('|||');
+    finalNotDoneRegrets = notDoneArr.join('|||');
+    finalComment = sanitizedComment || '';
+    finalCategory = sanitizedCategory || 'شخصي';
+  }
+
+  const userId = require('crypto').randomUUID();
+  const stmt = db.prepare(`
+    INSERT INTO stories (name, hide_name, done_regrets, notdone_regrets, comment, category, user_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  stmt.run(sanitizedName, hide_name ? 1 : 0, finalDoneRegrets, finalNotDoneRegrets, finalComment, finalCategory, userId);
+
+  if (getSetting('require_approval') !== '1') {
+    const lastId = db.prepare('SELECT last_insert_rowid() as id').get().id;
+    db.prepare('UPDATE stories SET approved = 1 WHERE id = ?').run(lastId);
+  }
+
+  const newStoryId = db.prepare('SELECT last_insert_rowid() as id').get().id;
+  db.prepare('UPDATE site_stats SET value = value + 1 WHERE key = ?').run('total_submissions');
+  fireWebhook('story.created', { id: newStoryId, name: sanitizedName, category: finalCategory });
+
+  const story = db.prepare('SELECT id, name, hide_name, done_regrets, notdone_regrets, comment, category, created_at FROM stories WHERE id = ?').get(newStoryId);
+  // Parse regrets into arrays for API response
+  story.done_regrets = story.done_regrets ? story.done_regrets.split('|||') : [];
+  story.notdone_regrets = story.notdone_regrets ? story.notdone_regrets.split('|||') : [];
+
+  res.status(201).json({ ok: true, id: newStoryId, story });
 });
 
 app.get('/api/docs', (req, res) => {
