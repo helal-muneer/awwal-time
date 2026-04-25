@@ -1,0 +1,150 @@
+<div class="max-w-4xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">🔑 رموز API</h1>
+      <p class="text-gray-500 text-sm mt-1">إدارة رموز الوصول لـ API — الرموز تتجاوز حدود الطلبات</p>
+    </div>
+    <button onclick="document.getElementById('createModal').classList.remove('hidden')" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+      + إنشاء رمز جديد
+    </button>
+  </div>
+
+  <% if (newToken) { %>
+  <div class="bg-green-50 border border-green-300 rounded-xl p-4 mb-6">
+    <div class="flex items-start gap-3">
+      <span class="text-green-600 text-xl">✅</span>
+      <div class="flex-1">
+        <p class="font-bold text-green-800">تم إنشاء الرمز "<%= newName %>" بنجاح!</p>
+        <p class="text-green-700 text-xs mt-1">⚠️ انسخ الرمز الآن — لن يظهر مرة أخرى</p>
+        <div class="mt-3 flex items-center gap-2">
+          <code class="bg-green-100 text-green-900 px-3 py-2 rounded-lg text-xs font-mono flex-1 break-all" dir="ltr" id="newTokenValue"><%= newToken %></code>
+          <button onclick="copyToken('newTokenValue')" class="bg-green-200 hover:bg-green-300 text-green-800 px-3 py-2 rounded-lg text-xs">نسخ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Create Modal -->
+  <div id="createModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+      <h3 class="text-lg font-bold mb-4">🔑 إنشاء رمز API جديد</h3>
+      <form action="/admin/api-tokens/create" method="POST">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">اسم الرمز</label>
+          <input type="text" name="name" placeholder="مثال: تطبيق الموبايل" maxlength="100"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" dir="rtl">
+          <p class="text-xs text-gray-400 mt-1">اسم لتعريف الرمز — يمكنك إنشاء عدة رموز بأسماء مختلفة</p>
+        </div>
+        <div class="flex gap-3 justify-end">
+          <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')"
+            class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">إلغاء</button>
+          <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg text-sm font-medium">إنشاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tokens List -->
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <% if (tokens.length === 0) { %>
+    <div class="p-12 text-center">
+      <div class="text-4xl mb-3">🔑</div>
+      <p class="text-gray-500">لا توجد رموز API بعد</p>
+      <p class="text-gray-400 text-sm mt-1">أنشئ رمزاً للوصول بدون حدود للطلبات</p>
+    </div>
+    <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-right font-medium text-gray-600">الاسم</th>
+            <th class="px-4 py-3 text-right font-medium text-gray-600">الرمز</th>
+            <th class="px-4 py-3 text-right font-medium text-gray-600">أنشئ بواسطة</th>
+            <th class="px-4 py-3 text-right font-medium text-gray-600">الحالة</th>
+            <th class="px-4 py-3 text-right font-medium text-gray-600">آخر استخدام</th>
+            <th class="px-4 py-3 text-right font-medium text-gray-600">تاريخ الإنشاء</th>
+            <th class="px-4 py-3 text-center font-medium text-gray-600">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% tokens.forEach(t => { %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 font-medium"><%= t.name %></td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-1">
+                <code class="text-xs font-mono text-gray-500" dir="ltr" id="token-<%= t.id %>"><%= t.token.substring(0, 12) %>••••••••</code>
+                <button onclick="copyToken('token-full-<%= t.id %>')" class="text-gray-400 hover:text-gray-600 text-xs" title="نسخ الرمز الكامل">📋</button>
+                <code class="hidden" id="token-full-<%= t.id %>"><%= t.token %></code>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-gray-500"><%= t.admin_username %></td>
+            <td class="px-4 py-3">
+              <% if (t.active) { %>
+              <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">فعّال</span>
+              <% } else { %>
+              <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">معطّل</span>
+              <% } %>
+            </td>
+            <td class="px-4 py-3 text-gray-500 text-xs"><%= t.last_used_at ? new Date(t.last_used_at).toLocaleDateString('ar-SA') : 'لم يُستخدم' %></td>
+            <td class="px-4 py-3 text-gray-500 text-xs"><%= new Date(t.created_at).toLocaleDateString('ar-SA') %></td>
+            <td class="px-4 py-3">
+              <div class="flex items-center justify-center gap-1">
+                <form action="/admin/api-tokens/<%= t.id %>/toggle" method="POST">
+                  <button type="submit" class="text-xs px-2 py-1 rounded hover:bg-gray-100"
+                    title="<%= t.active ? 'تعطيل' : 'تفعيل' %>">
+                    <%= t.active ? '⏸️' : '▶️' %>
+                  </button>
+                </form>
+                <form action="/admin/api-tokens/<%= t.id %>/regenerate" method="POST"
+                  onsubmit="return confirm('سيتم إنشاء رمز جديد بدل الحالي. هل أنت متأكد؟')">
+                  <button type="submit" class="text-xs px-2 py-1 rounded hover:bg-gray-100" title="إعادة إنشاء">🔄</button>
+                </form>
+                <form action="/admin/api-tokens/<%= t.id %>/delete" method="POST"
+                  onsubmit="return confirm('هل أنت متأكد من حذف هذا الرمز؟')">
+                  <button type="submit" class="text-xs px-2 py-1 rounded hover:bg-red-100 text-red-600" title="حذف">🗑️</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Usage Info -->
+  <div class="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+    <h4 class="font-bold text-blue-800 mb-2">📖 كيفية الاستخدام</h4>
+    <p class="text-sm text-blue-700 mb-3">أضف الرمز في header الطلب:</p>
+    <pre class="bg-blue-100 text-blue-900 p-3 rounded-lg text-xs font-mono overflow-x-auto" dir="ltr">POST /api/stories
+Authorization: Bearer awt_your_token_here
+Content-Type: application/json
+
+{
+  "name": "محمد",
+  "text": "أول مرة سافرت وحدي...",
+  "simple_mode": true
+}</pre>
+    <div class="mt-3 text-sm text-blue-700 space-y-1">
+      <p>✅ الرمز الفعّال يتجاوز حدود الطلبات (rate limits)</p>
+      <p>✅ يمكنك إنشاء عدة رموز لاستخدامات مختلفة</p>
+      <p>⚠️ حافظ على سرية الرموز — أي شخص يملك الرمز يمكنه إنشاء مشاركات بلا حدود</p>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyToken(elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const text = el.textContent || el.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    // brief visual feedback
+    const orig = el.style.background;
+    el.style.background = '#d1fae5';
+    setTimeout(() => { el.style.background = orig; }, 500);
+  });
+}
+</script>

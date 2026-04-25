@@ -110,6 +110,13 @@
       <p class="text-sm text-yellow-300/80">القراءة: 100 طلب/دقيقة لكل IP. الكتابة: 10 مشاركات/5 دقائق لكل IP. عند تجاوز الحد يُرجع <code class="text-yellow-300">429 Too Many Requests</code>.</p>
     </div>
 
+    <div class="bg-purple-900/20 border border-purple-800/30 rounded-xl p-4">
+      <h4 class="font-bold text-purple-400 mb-2">🔑 المصادقة برمز API</h4>
+      <p class="text-sm text-purple-300/80 mb-2">يمكن للأدمن إنشاء رموز API من لوحة التحكم. استخدام الرمز يتجاوز حدود الطلبات.</p>
+      <pre class="bg-dark-900/60 border border-dark-700/30 text-purple-400 p-3 rounded-lg text-xs" dir="ltr">Authorization: Bearer awt_your_token_here</pre>
+      <p class="text-sm text-purple-300/80 mt-2">أضف الـ header أعلاه في طلبات <code class="text-purple-300">POST /api/stories</code> لإنشاء مشاركات بلا حدود.</p>
+    </div>
+
     <div class="bg-blue-900/20 border border-blue-800/30 rounded-xl p-4">
       <h4 class="font-bold text-blue-400 mb-2">🔗 CORS</h4>
       <p class="text-sm text-blue-300/80">جميع نقاط API تدعم <code class="text-blue-300">Access-Control-Allow-Origin: *</code> للاستخدام من أي موقع.</p>
