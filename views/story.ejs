@@ -320,6 +320,51 @@ function updateFavButtons() {
 }
 updateFavButtons();
 
+// ===== Story Page Reaction Buttons (toggle) =====
+(function(){
+  var _ur = JSON.parse(localStorage.getItem('awwal_reactions') || '{}');
+  function saveUR() { localStorage.setItem('awwal_reactions', JSON.stringify(_ur)); }
+  function hasUR(sid, t) { return (_ur[sid] || []).indexOf(t) !== -1; }
+
+  var storyId = '<%= story.id %>';
+  document.querySelectorAll('.react-btn').forEach(function(btn) {
+    var type = btn.dataset.type;
+    // Init state
+    if (hasUR(storyId, type)) { btn.classList.add('active'); btn.classList.remove('opacity-50'); }
+    else { btn.classList.remove('active'); btn.classList.add('opacity-50'); }
+
+    btn.addEventListener('click', function() {
+      var countEl = btn.querySelector('.react-count');
+      var count = parseInt(countEl.textContent) || 0;
+      var had = hasUR(storyId, type);
+      var action = had ? 'remove' : 'add';
+
+      countEl.textContent = had ? count - 1 : count + 1;
+      btn.classList.toggle('active', !had);
+      btn.classList.toggle('opacity-50', had);
+      if (!_ur[storyId]) _ur[storyId] = [];
+      if (had) { _ur[storyId] = _ur[storyId].filter(function(x){return x!==type}); }
+      else { if (_ur[storyId].indexOf(type)===-1) _ur[storyId].push(type); }
+      saveUR();
+
+      fetch('/story/' + storyId + '/react', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:type, action:action})})
+      .then(function(r){return r.json()})
+      .then(function(d){
+        if (!d.ok) {
+          countEl.textContent = count; btn.classList.toggle('active', had); btn.classList.toggle('opacity-50', !had);
+          if (had) { _ur[storyId].push(type); } else { _ur[storyId] = _ur[storyId].filter(function(x){return x!==type}); }
+          saveUR();
+        } else { countEl.textContent = d.count; }
+      })
+      .catch(function(){
+        countEl.textContent = count; btn.classList.toggle('active', had); btn.classList.toggle('opacity-50', !had);
+        if (had) { _ur[storyId].push(type); } else { _ur[storyId] = _ur[storyId].filter(function(x){return x!==type}); }
+        saveUR();
+      });
+    });
+  });
+})();
+
 // Voting
 function voteComment(id, type, btn) {
   const container = btn.closest('.bg-dark-700\\/30') || btn.closest('.bg-dark-700\\/20') || btn.parentElement;
