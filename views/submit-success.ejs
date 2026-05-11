@@ -1,10 +1,38 @@
-<div class="text-center py-20 fade-in">
+<div class="max-w-lg mx-auto text-center py-12 px-4">
+  <!-- Top ad slot -->
+  <% if (typeof confirmAdTop !== 'undefined' && confirmAdTop) { %>
+    <div class="mb-6 ad-slot-confirm-top"><%- confirmAdTop %></div>
+  <% } %>
+
   <div class="text-6xl mb-4">🎉</div>
-  <h1 class="text-3xl font-bold mb-3">تم إرسال تجربتك بنجاح!</h1>
-  <p class="text-gray-400 mb-2">سيتم مراجعة تجربتك ونشرها قريباً</p>
-  <p class="text-sm text-gray-500 mb-8">شكراً لمشاركتك - قد تساعد شخص آخر يتمنى لو عرف قبل!</p>
-  <div class="flex justify-center gap-4">
-    <a href="/" class="bg-dark-700 hover:bg-dark-600 px-6 py-3 rounded-full font-bold transition">الرئيسية</a>
-    <a href="/submit" class="bg-brand-600 hover:bg-brand-700 px-6 py-3 rounded-full font-bold transition btn-glow" style="color:#fff !important">شارك تجربة أخرى</a>
+  <h1 class="text-2xl font-bold mb-2">تم إنشاء المشاركة بنجاح</h1>
+  <p class="text-gray-400 mb-1">جاري تحويلك للصفحة الرئيسية...</p>
+  <p class="text-gray-500 text-sm mb-6">
+    <span id="countdown" class="text-brand-400 font-bold text-lg">10</span> ثانية
+  </p>
+
+  <div class="flex gap-4 justify-center mb-8">
+    <a href="/" class="bg-brand-600 hover:bg-brand-700 text-white px-6 py-2.5 rounded-xl transition font-bold">الرئيسية</a>
+    <a href="/submit" class="bg-dark-700 hover:bg-dark-600 text-gray-200 px-6 py-2.5 rounded-xl transition">مشاركة أخرى</a>
   </div>
+
+  <!-- Bottom ad slot -->
+  <% if (typeof confirmAdBottom !== 'undefined' && confirmAdBottom) { %>
+    <div class="mt-6 ad-slot-confirm-bottom"><%- confirmAdBottom %></div>
+  <% } %>
 </div>
+
+<script>
+(function() {
+  var seconds = 10;
+  var el = document.getElementById('countdown');
+  var timer = setInterval(function() {
+    seconds--;
+    el.textContent = seconds;
+    if (seconds <= 0) {
+      clearInterval(timer);
+      window.location.href = '/';
+    }
+  }, 1000);
+})();
+</script>

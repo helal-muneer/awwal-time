@@ -228,6 +228,8 @@ settings.run('comments_mode', 'open');
 settings.run('date_format', 'gregorian');
 settings.run('allow_image_upload', '0');
 settings.run('auto_hide_reports', '5');
+settings.run('confirm_ad_top', '');
+settings.run('confirm_ad_bottom', '');
 
 // Theme definitions
 const THEMES = {
@@ -381,7 +383,9 @@ app.get('/', (req, res) => {
   else if (sort === 'random') order = 'ORDER BY RANDOM()';
 
   const stories = db.prepare(`
-    SELECT s.*, (SELECT COALESCE(SUM(r.count),0) FROM reactions r WHERE r.story_id = s.id) as total_reacts
+    SELECT s.*,
+      (SELECT COALESCE(SUM(r.count),0) FROM reactions r WHERE r.story_id = s.id) as total_reacts,
+      (SELECT COUNT(*) FROM comments c WHERE c.story_id = s.id AND c.approved = 1) as comment_count
     FROM stories s ${where} ${order} LIMIT ? OFFSET ?
   `).all(...params, perPage, offset);
 
@@ -604,7 +608,12 @@ app.post('/submit', userRateLimit(5, 300000), (req, res, next) => {
   if (req.xhr || req.headers.accept === 'application/json') {
     return res.json({ ok: true, id: newStoryId });
   }
-  res.render('submit-success', { title: 'تم الإرسال بنجاح - أول مرّة' });
+  res.render('submit-success', { title: 'تم الإرسال بنجاح - أول مرّة', confirmAdTop: getSetting('confirm_ad_top'), confirmAdBottom: getSetting('confirm_ad_bottom') });
+});
+
+// Submit success page (for AJAX redirect)
+app.get('/submit-success', (req, res) => {
+  res.render('submit-success', { title: 'تم الإرسال بنجاح - أول مرّة', confirmAdTop: getSetting('confirm_ad_top'), confirmAdBottom: getSetting('confirm_ad_bottom') });
 });
 
 // Privacy Policy
@@ -763,6 +772,8 @@ app.get('/admin/settings', requireSuper, (req, res) => {
     commentsMode: getSetting('comments_mode') || 'open',
     autoHideReports: getSetting('auto_hide_reports') || '5',
     dateFormat: getSetting('date_format') || 'gregorian',
+    confirmAdTop: getSetting('confirm_ad_top'),
+    confirmAdBottom: getSetting('confirm_ad_bottom'),
     title: 'الإعدادات - أول مرّة'
   });
 });
@@ -798,6 +809,8 @@ app.post('/admin/settings', requireSuper, (req, res) => {
   if (req.body.date_format) {
     db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('date_format', ?)").run(req.body.date_format);
   }
+  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'confirm_ad_top'").run(req.body.confirm_ad_top || '');
+  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'confirm_ad_bottom'").run(req.body.confirm_ad_bottom || '');
   logWithAudit(req, 'تحديث الإعدادات', 'تم تحديث إعدادات الموقع');
   res.redirect('/admin/settings');
 });
