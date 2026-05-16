@@ -3,8 +3,6 @@
   var notDoneItems = (story.notdone_regrets || '').split('|||').filter(Boolean);
   var shareUrl = 'https://awwal-time.ksawats.com/story/' + story.id;
   var shareText = encodeURIComponent('اقرأ تجربة ' + (story.hide_name ? 'مجهول' : story.name) + ' على أول مرّة');
-  var reactions = {};
-  try { db.prepare('SELECT type, count FROM reactions WHERE story_id = ?').all(story.id).forEach(function(r){reactions[r.type]=r.count;}); } catch(e){}
 %>
 
 <!-- JSON-LD -->
@@ -75,20 +73,20 @@
 
   <!-- Reactions Bar -->
   <div class="flex justify-center gap-3 mb-8">
-    <button class="react-btn flex flex-col items-center gap-1 bg-dark-800/40 border border-dark-700/30 rounded-xl px-5 py-3 hover:bg-dark-700/40 transition <%= reactions.relatable ? 'active border-green-800/40 bg-green-900/10' : 'opacity-50' %>"
-      data-story="<%= story.id %>" data-type="relatable">
+    <button class="react-btn flex flex-col items-center gap-1 bg-dark-800/40 border border-dark-700/30 rounded-xl px-5 py-3 hover:bg-dark-700/40 transition"
+      data-story="<%= story.id %>" data-type="relatable" onclick="toggleStoryReact(this)">
       <span class="text-2xl">🫂</span>
       <span class="text-xs text-gray-400">أشعر بنفس الشي</span>
       <span class="react-count text-sm font-bold"><%= reactions.relatable || 0 %></span>
     </button>
-    <button class="react-btn flex flex-col items-center gap-1 bg-dark-800/40 border border-dark-700/30 rounded-xl px-5 py-3 hover:bg-dark-700/40 transition <%= reactions.sympathy ? 'active border-red-800/40 bg-red-900/10' : 'opacity-50' %>"
-      data-story="<%= story.id %>" data-type="sympathy">
+    <button class="react-btn flex flex-col items-center gap-1 bg-dark-800/40 border border-dark-700/30 rounded-xl px-5 py-3 hover:bg-dark-700/40 transition"
+      data-story="<%= story.id %>" data-type="sympathy" onclick="toggleStoryReact(this)">
       <span class="text-2xl">❤️</span>
       <span class="text-xs text-gray-400">أتمنى لك الخير</span>
       <span class="react-count text-sm font-bold"><%= reactions.sympathy || 0 %></span>
     </button>
-    <button class="react-btn flex flex-col items-center gap-1 bg-dark-800/40 border border-dark-700/30 rounded-xl px-5 py-3 hover:bg-dark-700/40 transition <%= reactions.motivated ? 'active border-yellow-800/40 bg-yellow-900/10' : 'opacity-50' %>"
-      data-story="<%= story.id %>" data-type="motivated">
+    <button class="react-btn flex flex-col items-center gap-1 bg-dark-800/40 border border-dark-700/30 rounded-xl px-5 py-3 hover:bg-dark-700/40 transition"
+      data-story="<%= story.id %>" data-type="motivated" onclick="toggleStoryReact(this)">
       <span class="text-2xl">💪</span>
       <span class="text-xs text-gray-400">ألهمتني</span>
       <span class="react-count text-sm font-bold"><%= reactions.motivated || 0 %></span>
@@ -300,6 +298,79 @@
 </div>
 
 <script>
+// Story Reaction Toggle
+var _awwal_ur = {};
+try { _awwal_ur = JSON.parse(localStorage.getItem('awwal_react_v2') || '{}'); } catch(e) {}
+function _saveUR() { localStorage.setItem('awwal_react_v2', JSON.stringify(_awwal_ur)); }
+function _hasReacted(sid, t) { return (_awwal_ur[sid] || []).indexOf(t) !== -1; }
+
+function toggleStoryReact(btn) {
+  var storyId = btn.dataset.story;
+  var type = btn.dataset.type;
+  var countEl = btn.querySelector('.react-count');
+  var oldCount = parseInt(countEl.textContent) || 0;
+  var isActive = btn.classList.contains('active');
+  
+  // Prevent double-click
+  if (btn.dataset.busy === '1') return;
+  btn.dataset.busy = '1';
+
+  var action = isActive ? 'remove' : 'add';
+  var newCount = isActive ? Math.max(0, oldCount - 1) : oldCount + 1;
+
+  // Optimistic UI update
+  countEl.textContent = newCount;
+  if (!isActive) {
+    btn.classList.add('active');
+    btn.classList.remove('opacity-50');
+    if (type === 'sympathy') { btn.classList.add('border-red-800/40', 'bg-red-900/10'); }
+    else if (type === 'relatable') { btn.classList.add('border-green-800/40', 'bg-green-900/10'); }
+    else if (type === 'motivated') { btn.classList.add('border-yellow-800/40', 'bg-yellow-900/10'); }
+  } else {
+    btn.classList.remove('active', 'border-red-800/40', 'bg-red-900/10', 'border-green-800/40', 'bg-green-900/10', 'border-yellow-800/40', 'bg-yellow-900/10');
+    btn.classList.add('opacity-50');
+  }
+
+  // Update localStorage
+  if (!_awwal_ur[storyId]) _awwal_ur[storyId] = [];
+  if (isActive) { _awwal_ur[storyId] = _awwal_ur[storyId].filter(function(x){return x!==type}); }
+  else { if (_awwal_ur[storyId].indexOf(type)===-1) _awwal_ur[storyId].push(type); }
+  _saveUR();
+
+  fetch('/story/' + storyId + '/react', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:type, action:action})})
+  .then(function(r){return r.json()})
+  .then(function(d){ 
+    btn.dataset.busy = '0';
+    if(!d.ok){ 
+      // Revert on failure
+      countEl.textContent = oldCount;
+      if (isActive) { btn.classList.add('active'); btn.classList.remove('opacity-50'); }
+      else { btn.classList.remove('active'); btn.classList.add('opacity-50'); }
+    } 
+  })
+  .catch(function(){ 
+    btn.dataset.busy = '0';
+    countEl.textContent = oldCount;
+    if (isActive) { btn.classList.add('active'); btn.classList.remove('opacity-50'); }
+    else { btn.classList.remove('active'); btn.classList.add('opacity-50'); }
+  });
+}
+
+// Init reaction buttons from localStorage
+document.querySelectorAll('.react-btn').forEach(function(btn) {
+  var sid = btn.dataset.story;
+  var type = btn.dataset.type;
+  if (_hasReacted(sid, type)) {
+    btn.classList.add('active');
+    btn.classList.remove('opacity-50');
+    if (type === 'sympathy') { btn.classList.add('border-red-800/40', 'bg-red-900/10'); }
+    else if (type === 'relatable') { btn.classList.add('border-green-800/40', 'bg-green-900/10'); }
+    else if (type === 'motivated') { btn.classList.add('border-yellow-800/40', 'bg-yellow-900/10'); }
+  } else {
+    btn.classList.add('opacity-50');
+  }
+});
+
 // Favorites
 function getFavorites() {
   try { return JSON.parse(localStorage.getItem('awwal_favorites') || '[]'); } catch { return []; }

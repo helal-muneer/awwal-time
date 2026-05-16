@@ -160,15 +160,6 @@ const upload = multer({
   }
 });
 try { db.exec('ALTER TABLE comments ADD COLUMN user_id TEXT'); } catch(e) {}
-try { db.exec(`CREATE TABLE IF NOT EXISTS api_tokens (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    admin_username TEXT NOT NULL,
-    token TEXT UNIQUE NOT NULL,
-    name TEXT NOT NULL DEFAULT 'API Token',
-    active INTEGER DEFAULT 1,
-    last_used_at DATETIME,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`); } catch(e) {}
 
 // Sanitize input
 function sanitize(str, maxLen = 5000) {
@@ -228,8 +219,6 @@ settings.run('comments_mode', 'open');
 settings.run('date_format', 'gregorian');
 settings.run('allow_image_upload', '0');
 settings.run('auto_hide_reports', '5');
-settings.run('confirm_ad_top', '');
-settings.run('confirm_ad_bottom', '');
 
 // Theme definitions
 const THEMES = {
@@ -383,8 +372,7 @@ app.get('/', (req, res) => {
   else if (sort === 'random') order = 'ORDER BY RANDOM()';
 
   const stories = db.prepare(`
-    SELECT s.*,
-      (SELECT COALESCE(SUM(r.count),0) FROM reactions r WHERE r.story_id = s.id) as total_reacts,
+    SELECT s.*, (SELECT COALESCE(SUM(r.count),0) FROM reactions r WHERE r.story_id = s.id) as total_reacts,
       (SELECT COUNT(*) FROM comments c WHERE c.story_id = s.id AND c.approved = 1) as comment_count
     FROM stories s ${where} ${order} LIMIT ? OFFSET ?
   `).all(...params, perPage, offset);
@@ -480,8 +468,14 @@ app.get('/story/:id', (req, res) => {
   const wordCount = allText.split(/[\s|||]+/).filter(Boolean).length;
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
+  // Story reactions
+  const reactions = {};
+  db.prepare('SELECT type, count FROM reactions WHERE story_id = ?').all(story.id).forEach(r => {
+    reactions[r.type] = r.count;
+  });
+
   res.render('story', {
-    story, comments, related, popular, readingTime,
+    story, comments, related, popular, readingTime, reactions,
     title: `تجربة ${story.hide_name ? 'مجهول' : story.name} - أول مرّة`,
     description: `اقرأ تجربة ${story.hide_name ? 'مجهول' : story.name} على أول مرّة`,
     canonical: `https://awwal-time.ksawats.com/story/${story.id}`,
@@ -489,7 +483,7 @@ app.get('/story/:id', (req, res) => {
   });
 });
 
-// React to story (from cards)
+// React to story (from cards - with toggle)
 app.post('/react', (req, res) => {
   const { story_id, type, action } = req.body;
   if (!story_id || !['relatable', 'sympathy', 'motivated'].includes(type)) return res.json({ok:false,error:'invalid'});
@@ -502,7 +496,7 @@ app.post('/react', (req, res) => {
   res.json({ok:true, count: row ? row.count : 0});
 });
 
-// React to story (from story page)
+// React to story (from story page - with toggle)
 app.post('/story/:id/react', (req, res) => {
   const { type, action } = req.body;
   const storyId = req.params.id;
@@ -608,12 +602,20 @@ app.post('/submit', userRateLimit(5, 300000), (req, res, next) => {
   if (req.xhr || req.headers.accept === 'application/json') {
     return res.json({ ok: true, id: newStoryId });
   }
-  res.render('submit-success', { title: 'تم الإرسال بنجاح - أول مرّة', confirmAdTop: getSetting('confirm_ad_top'), confirmAdBottom: getSetting('confirm_ad_bottom') });
+  res.render('submit-success', {
+    title: 'تم الإرسال بنجاح - أول مرّة',
+    confirmAdTop: getSetting('confirm_ad_top'),
+    confirmAdBottom: getSetting('confirm_ad_bottom')
+  });
 });
 
-// Submit success page (for AJAX redirect)
+// GET submit-success (for redirect from modal)
 app.get('/submit-success', (req, res) => {
-  res.render('submit-success', { title: 'تم الإرسال بنجاح - أول مرّة', confirmAdTop: getSetting('confirm_ad_top'), confirmAdBottom: getSetting('confirm_ad_bottom') });
+  res.render('submit-success', {
+    title: 'تم الإرسال بنجاح - أول مرّة',
+    confirmAdTop: getSetting('confirm_ad_top'),
+    confirmAdBottom: getSetting('confirm_ad_bottom')
+  });
 });
 
 // Privacy Policy
@@ -809,8 +811,9 @@ app.post('/admin/settings', requireSuper, (req, res) => {
   if (req.body.date_format) {
     db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('date_format', ?)").run(req.body.date_format);
   }
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'confirm_ad_top'").run(req.body.confirm_ad_top || '');
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'confirm_ad_bottom'").run(req.body.confirm_ad_bottom || '');
+  // Confirmation page ad slots
+  db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('confirm_ad_top', ?)").run(req.body.confirm_ad_top || '');
+  db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('confirm_ad_bottom', ?)").run(req.body.confirm_ad_bottom || '');
   logWithAudit(req, 'تحديث الإعدادات', 'تم تحديث إعدادات الموقع');
   res.redirect('/admin/settings');
 });
@@ -1712,44 +1715,8 @@ app.get('/api/search', rateLimit, (req, res) => {
   res.json({ stories, total: stories.length, query: q });
 });
 
-// ============ API Token Auth ============
-function authenticateApiToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'API token required. Use: Authorization: Bearer <token>' });
-  }
-  const token = authHeader.split(' ')[1];
-  const tokenRecord = db.prepare('SELECT * FROM api_tokens WHERE token = ? AND active = 1').get(token);
-  if (!tokenRecord) {
-    return res.status(401).json({ error: 'Invalid or inactive API token' });
-  }
-  // Update last_used_at
-  db.prepare('UPDATE api_tokens SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?').run(tokenRecord.id);
-  req.apiToken = tokenRecord;
-  next();
-}
-
-function generateApiToken() {
-  const { randomBytes } = require('crypto');
-  return 'awt_' + randomBytes(32).toString('hex');
-}
-
 // ============ API: Create Story ============
-app.post('/api/stories', rateLimit, (req, res, next) => {
-  // Check for API token - if valid, skip userRateLimit
-  const authHeader = req.headers['authorization'];
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    const tokenRecord = db.prepare('SELECT * FROM api_tokens WHERE token = ? AND active = 1').get(token);
-    if (tokenRecord) {
-      db.prepare('UPDATE api_tokens SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?').run(tokenRecord.id);
-      req.apiToken = tokenRecord;
-      return next();
-    }
-  }
-  // No valid token — apply user rate limit
-  userRateLimit(10, 300000)(req, res, next);
-}, (req, res) => {
+app.post('/api/stories', rateLimit, userRateLimit(10, 300000), (req, res) => {
   const { name, hide_name, category, done_regrets, notdone_regrets, comment, simple_mode, text } = req.body;
 
   const sanitizedName = sanitize(name, 100);
@@ -1986,69 +1953,6 @@ app.post('/admin/webhooks/:id/delete', requireAuth, (req, res) => {
 app.post('/admin/webhooks/deliveries/clear', requireAuth, (req, res) => {
   db.prepare('DELETE FROM webhook_deliveries').run();
   res.redirect('/admin/webhooks');
-});
-
-// ============ API TOKENS ============
-app.get('/admin/api-tokens', requireAuth, (req, res) => {
-  const tokens = db.prepare('SELECT id, admin_username, token, name, active, last_used_at, created_at FROM api_tokens ORDER BY created_at DESC').all();
-  res.render('admin/api-tokens', {
-    layout: 'admin/layout', tokens, newToken: null, newName: null,
-    title: 'رموز API - أول مرّة'
-  });
-});
-
-app.post('/admin/api-tokens/create', requireAuth, (req, res) => {
-  const { name } = req.body;
-  const tokenName = sanitize(name || 'API Token', 100);
-  const token = generateApiToken();
-  const username = getAdminUsername(req);
-  db.prepare('INSERT INTO api_tokens (admin_username, token, name) VALUES (?, ?, ?)').run(username, token, tokenName);
-  logActivity('إنشاء رمز API', tokenName);
-  // Show the token once
-  req.flash = req.flash || {};
-  res.render('admin/api-tokens', {
-    layout: 'admin/layout',
-    tokens: db.prepare('SELECT id, admin_username, token, name, active, last_used_at, created_at FROM api_tokens ORDER BY created_at DESC').all(),
-    title: 'رموز API - أول مرّة',
-    newToken: token,
-    newName: tokenName
-  });
-});
-
-app.post('/admin/api-tokens/:id/toggle', requireAuth, (req, res) => {
-  const tok = db.prepare('SELECT active, name FROM api_tokens WHERE id = ?').get(req.params.id);
-  if (tok) {
-    db.prepare('UPDATE api_tokens SET active = ? WHERE id = ?').run(tok.active ? 0 : 1, req.params.id);
-    logActivity(tok.active ? 'تعطيل رمز API' : 'تفعيل رمز API', tok.name);
-  }
-  res.redirect('/admin/api-tokens');
-});
-
-app.post('/admin/api-tokens/:id/delete', requireAuth, (req, res) => {
-  const tok = db.prepare('SELECT name FROM api_tokens WHERE id = ?').get(req.params.id);
-  if (tok) {
-    db.prepare('DELETE FROM api_tokens WHERE id = ?').run(req.params.id);
-    logActivity('حذف رمز API', tok.name);
-  }
-  res.redirect('/admin/api-tokens');
-});
-
-app.post('/admin/api-tokens/:id/regenerate', requireAuth, (req, res) => {
-  const tok = db.prepare('SELECT name FROM api_tokens WHERE id = ?').get(req.params.id);
-  if (tok) {
-    const newToken = generateApiToken();
-    db.prepare('UPDATE api_tokens SET token = ? WHERE id = ?').run(newToken, req.params.id);
-    logActivity('إعادة إنشاء رمز API', tok.name);
-    res.render('admin/api-tokens', {
-      layout: 'admin/layout',
-      tokens: db.prepare('SELECT id, admin_username, token, name, active, last_used_at, created_at FROM api_tokens ORDER BY created_at DESC').all(),
-      title: 'رموز API - أول مرّة',
-      newToken: newToken,
-      newName: tok.name
-    });
-  } else {
-    res.redirect('/admin/api-tokens');
-  }
 });
 
 // Fire webhooks on events
