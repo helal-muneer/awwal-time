@@ -50,7 +50,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/tailwind.css">
+  <link rel="stylesheet" href="/css/tailwind.css?v=1778572868">
   <style>
     :root {
       --primary: <%= typeof theme !== 'undefined' ? theme.primary : '#dc2626' %>;
@@ -368,10 +368,10 @@
     }
 
     // Scroll animations
-    const observer = new IntersectionObserver((entries) => {
+    window._fadeObserver = new IntersectionObserver((entries) => {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
     }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+    document.querySelectorAll('.fade-up').forEach(el => window._fadeObserver.observe(el));
 
     // Reactions
     document.querySelectorAll('.react-btn').forEach(btn => {

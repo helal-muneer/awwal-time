@@ -372,7 +372,8 @@ app.get('/', (req, res) => {
   else if (sort === 'random') order = 'ORDER BY RANDOM()';
 
   const stories = db.prepare(`
-    SELECT s.*, (SELECT COALESCE(SUM(r.count),0) FROM reactions r WHERE r.story_id = s.id) as total_reacts
+    SELECT s.*, (SELECT COALESCE(SUM(r.count),0) FROM reactions r WHERE r.story_id = s.id) as total_reacts,
+      (SELECT COUNT(*) FROM comments c WHERE c.story_id = s.id AND c.approved = 1) as comment_count
     FROM stories s ${where} ${order} LIMIT ? OFFSET ?
   `).all(...params, perPage, offset);
 
@@ -467,8 +468,14 @@ app.get('/story/:id', (req, res) => {
   const wordCount = allText.split(/[\s|||]+/).filter(Boolean).length;
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
+  // Story reactions
+  const reactions = {};
+  db.prepare('SELECT type, count FROM reactions WHERE story_id = ?').all(story.id).forEach(r => {
+    reactions[r.type] = r.count;
+  });
+
   res.render('story', {
-    story, comments, related, popular, readingTime,
+    story, comments, related, popular, readingTime, reactions,
     title: `تجربة ${story.hide_name ? 'مجهول' : story.name} - أول مرّة`,
     description: `اقرأ تجربة ${story.hide_name ? 'مجهول' : story.name} على أول مرّة`,
     canonical: `https://awwal-time.ksawats.com/story/${story.id}`,
@@ -476,13 +483,31 @@ app.get('/story/:id', (req, res) => {
   });
 });
 
-// React to story
+// React to story (from cards - with toggle)
+app.post('/react', (req, res) => {
+  const { story_id, type, action } = req.body;
+  if (!story_id || !['relatable', 'sympathy', 'motivated'].includes(type)) return res.json({ok:false,error:'invalid'});
+  if (action === 'remove') {
+    db.prepare('UPDATE reactions SET count = MAX(0, count - 1) WHERE story_id = ? AND type = ? AND count > 0').run(story_id, type);
+  } else {
+    db.prepare('INSERT INTO reactions (story_id, type, count) VALUES (?, ?, 1) ON CONFLICT(story_id, type) DO UPDATE SET count = count + 1').run(story_id, type);
+  }
+  const row = db.prepare('SELECT count FROM reactions WHERE story_id = ? AND type = ?').get(story_id, type);
+  res.json({ok:true, count: row ? row.count : 0});
+});
+
+// React to story (from story page - with toggle)
 app.post('/story/:id/react', (req, res) => {
-  const { type } = req.body;
+  const { type, action } = req.body;
   const storyId = req.params.id;
-  if (!['relatable', 'sympathy', 'motivated'].includes(type)) return res.json({error:'invalid'});
-  db.prepare('INSERT INTO reactions (story_id, type, count) VALUES (?, ?, 1) ON CONFLICT(story_id, type) DO UPDATE SET count = count + 1').run(storyId, type);
-  res.json({ok:true});
+  if (!['relatable', 'sympathy', 'motivated'].includes(type)) return res.json({ok:false,error:'invalid'});
+  if (action === 'remove') {
+    db.prepare('UPDATE reactions SET count = MAX(0, count - 1) WHERE story_id = ? AND type = ? AND count > 0').run(storyId, type);
+  } else {
+    db.prepare('INSERT INTO reactions (story_id, type, count) VALUES (?, ?, 1) ON CONFLICT(story_id, type) DO UPDATE SET count = count + 1').run(storyId, type);
+  }
+  const row = db.prepare('SELECT count FROM reactions WHERE story_id = ? AND type = ?').get(storyId, type);
+  res.json({ok:true, count: row ? row.count : 0});
 });
 
 // Submit page
@@ -577,7 +602,20 @@ app.post('/submit', userRateLimit(5, 300000), (req, res, next) => {
   if (req.xhr || req.headers.accept === 'application/json') {
     return res.json({ ok: true, id: newStoryId });
   }
-  res.render('submit-success', { title: 'تم الإرسال بنجاح - أول مرّة' });
+  res.render('submit-success', {
+    title: 'تم الإرسال بنجاح - أول مرّة',
+    confirmAdTop: getSetting('confirm_ad_top'),
+    confirmAdBottom: getSetting('confirm_ad_bottom')
+  });
+});
+
+// GET submit-success (for redirect from modal)
+app.get('/submit-success', (req, res) => {
+  res.render('submit-success', {
+    title: 'تم الإرسال بنجاح - أول مرّة',
+    confirmAdTop: getSetting('confirm_ad_top'),
+    confirmAdBottom: getSetting('confirm_ad_bottom')
+  });
 });
 
 // Privacy Policy
@@ -736,6 +774,8 @@ app.get('/admin/settings', requireSuper, (req, res) => {
     commentsMode: getSetting('comments_mode') || 'open',
     autoHideReports: getSetting('auto_hide_reports') || '5',
     dateFormat: getSetting('date_format') || 'gregorian',
+    confirmAdTop: getSetting('confirm_ad_top'),
+    confirmAdBottom: getSetting('confirm_ad_bottom'),
     title: 'الإعدادات - أول مرّة'
   });
 });
@@ -771,6 +811,9 @@ app.post('/admin/settings', requireSuper, (req, res) => {
   if (req.body.date_format) {
     db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('date_format', ?)").run(req.body.date_format);
   }
+  // Confirmation page ad slots
+  db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('confirm_ad_top', ?)").run(req.body.confirm_ad_top || '');
+  db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('confirm_ad_bottom', ?)").run(req.body.confirm_ad_bottom || '');
   logWithAudit(req, 'تحديث الإعدادات', 'تم تحديث إعدادات الموقع');
   res.redirect('/admin/settings');
 });
