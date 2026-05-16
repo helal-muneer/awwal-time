@@ -160,6 +160,15 @@ const upload = multer({
   }
 });
 try { db.exec('ALTER TABLE comments ADD COLUMN user_id TEXT'); } catch(e) {}
+try { db.exec(`CREATE TABLE IF NOT EXISTS api_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_username TEXT NOT NULL,
+    token TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL DEFAULT 'API Token',
+    active INTEGER DEFAULT 1,
+    last_used_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`); } catch(e) {}
 
 // Sanitize input
 function sanitize(str, maxLen = 5000) {
@@ -219,6 +228,11 @@ settings.run('comments_mode', 'open');
 settings.run('date_format', 'gregorian');
 settings.run('allow_image_upload', '0');
 settings.run('auto_hide_reports', '5');
+settings.run('confirm_ad_top', '');
+settings.run('confirm_ad_bottom', '');
+settings.run('site_name', 'أول مرّة');
+settings.run('site_description', '');
+settings.run('timezone', 'Asia/Riyadh');
 
 // Theme definitions
 const THEMES = {
@@ -776,46 +790,59 @@ app.get('/admin/settings', requireSuper, (req, res) => {
     dateFormat: getSetting('date_format') || 'gregorian',
     confirmAdTop: getSetting('confirm_ad_top'),
     confirmAdBottom: getSetting('confirm_ad_bottom'),
+    timezone: getSetting('timezone') || 'Asia/Riyadh',
     title: 'الإعدادات - أول مرّة'
   });
 });
 
 app.post('/admin/settings', requireSuper, (req, res) => {
+  try {
   const { require_approval, adsense_header, adsense_footer, site_name, site_description,
           email_enabled, mail_host, mail_port, mail_user, mail_pass, mail_from, weekly_question,
           show_categories, show_advanced_submit, show_separate_regrets, show_leaderboard,
           show_compare, show_stats_page, show_weekly_question, show_related_stories } = req.body;
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'require_approval'").run(require_approval === 'on' ? '1' : '0');
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'adsense_header'").run(adsense_header || '');
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'adsense_footer'").run(adsense_footer || '');
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'custom_head_code'").run(req.body.custom_head_code || '');
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'site_name'").run(site_name || 'أول مرّة');
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'site_description'").run(site_description || '');
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'email_enabled'").run(email_enabled === 'on' ? '1' : '0');
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'mail_host'").run(mail_host || '');
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'mail_port'").run(mail_port || '587');
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'mail_user'").run(mail_user || '');
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'mail_pass'").run(mail_pass || '');
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'mail_from'").run(mail_from || '');
-  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'weekly_question'").run(weekly_question || '');
+  // Use INSERT OR REPLACE for all settings to handle both new and existing rows
+  const upsert = db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)");
+  upsert.run('require_approval', require_approval === 'on' ? '1' : '0');
+  upsert.run('adsense_header', adsense_header || '');
+  upsert.run('adsense_footer', adsense_footer || '');
+  upsert.run('custom_head_code', req.body.custom_head_code || '');
+  upsert.run('site_name', site_name || 'أول مرّة');
+  upsert.run('site_description', site_description || '');
+  upsert.run('email_enabled', email_enabled === 'on' ? '1' : '0');
+  upsert.run('mail_host', mail_host || '');
+  upsert.run('mail_port', mail_port || '587');
+  upsert.run('mail_user', mail_user || '');
+  upsert.run('mail_pass', mail_pass || '');
+  upsert.run('mail_from', mail_from || '');
+  upsert.run('weekly_question', weekly_question || '');
   // Feature toggles
   ['show_categories','show_advanced_submit','show_separate_regrets','show_leaderboard','show_compare','show_stats_page','show_weekly_question','show_related_stories','show_search','allow_image_upload'].forEach(key => {
-    db.prepare("UPDATE site_settings SET value = ? WHERE key = ?").run(req.body[key] === 'on' ? '1' : '0', key);
+    upsert.run(key, req.body[key] === 'on' ? '1' : '0');
   });
   // Comments mode
   if (req.body.comments_mode) {
-    db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('comments_mode', ?)").run(req.body.comments_mode);
+    upsert.run('comments_mode', req.body.comments_mode);
   }
   // Auto-hide reports threshold
-  db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('auto_hide_reports', ?)").run(String(parseInt(req.body.auto_hide_reports) || 0));
+  upsert.run('auto_hide_reports', String(parseInt(req.body.auto_hide_reports) || 0));
+  // Date format
   if (req.body.date_format) {
-    db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('date_format', ?)").run(req.body.date_format);
+    upsert.run('date_format', req.body.date_format);
+  }
+  // Timezone
+  if (req.body.timezone) {
+    upsert.run('timezone', req.body.timezone);
   }
   // Confirmation page ad slots
-  db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('confirm_ad_top', ?)").run(req.body.confirm_ad_top || '');
-  db.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('confirm_ad_bottom', ?)").run(req.body.confirm_ad_bottom || '');
+  upsert.run('confirm_ad_top', req.body.confirm_ad_top || '');
+  upsert.run('confirm_ad_bottom', req.body.confirm_ad_bottom || '');
   logWithAudit(req, 'تحديث الإعدادات', 'تم تحديث إعدادات الموقع');
   res.redirect('/admin/settings');
+  } catch(err) {
+    console.error('Settings save error:', err);
+    res.status(500).send('خطأ في حفظ الإعدادات');
+  }
 });
 
 // Category management API
@@ -1715,8 +1742,43 @@ app.get('/api/search', rateLimit, (req, res) => {
   res.json({ stories, total: stories.length, query: q });
 });
 
+// ============ API Token Auth ============
+function authenticateApiToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'API token required. Use: Authorization: Bearer <token>' });
+  }
+  const token = authHeader.split(' ')[1];
+  const tokenRecord = db.prepare('SELECT * FROM api_tokens WHERE token = ? AND active = 1').get(token);
+  if (!tokenRecord) {
+    return res.status(401).json({ error: 'Invalid or inactive API token' });
+  }
+  // Update last_used_at
+  db.prepare('UPDATE api_tokens SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?').run(tokenRecord.id);
+  req.apiToken = tokenRecord;
+  next();
+}
+
+function generateApiToken() {
+  const { randomBytes } = require('crypto');
+  return 'awt_' + randomBytes(32).toString('hex');
+}
+
 // ============ API: Create Story ============
-app.post('/api/stories', rateLimit, userRateLimit(10, 300000), (req, res) => {
+app.post('/api/stories', rateLimit, (req, res, next) => {
+  // Check for API token - if valid, skip userRateLimit
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    const tokenRecord = db.prepare('SELECT * FROM api_tokens WHERE token = ? AND active = 1').get(token);
+    if (tokenRecord) {
+      db.prepare('UPDATE api_tokens SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?').run(tokenRecord.id);
+      req.apiToken = tokenRecord;
+      return next();
+    }
+  }
+  userRateLimit(10, 300000)(req, res, next);
+}, (req, res) => {
   const { name, hide_name, category, done_regrets, notdone_regrets, comment, simple_mode, text } = req.body;
 
   const sanitizedName = sanitize(name, 100);
@@ -2042,6 +2104,48 @@ app.post('/set-theme', (req, res) => {
 app.use((req, res) => {
   const popular = db.prepare('SELECT * FROM stories WHERE approved = 1 ORDER BY views DESC LIMIT 5').all();
   res.status(404).render('404', { title: 'الصفحة غير موجودة', popular });
+});
+
+// ============ API Token Admin Routes ============
+app.get('/admin/api-tokens', requireAuth, (req, res) => {
+  const tokens = db.prepare('SELECT id, admin_username, token, name, active, last_used_at, created_at FROM api_tokens ORDER BY created_at DESC').all();
+  res.render('admin/api-tokens', {
+    layout: 'admin/layout',
+    tokens,
+    title: 'رموز API - أول مرّة'
+  });
+});
+
+app.post('/admin/api-tokens/create', requireAuth, (req, res) => {
+  const username = getAdminUsername(req);
+  const token = generateApiToken();
+  const tokenName = req.body.name || 'API Token';
+  db.prepare('INSERT INTO api_tokens (admin_username, token, name) VALUES (?, ?, ?)').run(username, token, tokenName);
+  logWithAudit(req, 'إنشاء رمز API', `رمز جديد: ${tokenName}`);
+  res.render('admin/api-tokens', {
+    layout: 'admin/layout',
+    newToken: token,
+    tokens: db.prepare('SELECT id, admin_username, token, name, active, last_used_at, created_at FROM api_tokens ORDER BY created_at DESC').all(),
+    title: 'رموز API - أول مرّة'
+  });
+});
+
+app.post('/admin/api-tokens/:id/toggle', requireAuth, (req, res) => {
+  const tok = db.prepare('SELECT active, name FROM api_tokens WHERE id = ?').get(req.params.id);
+  if (tok) {
+    db.prepare('UPDATE api_tokens SET active = ? WHERE id = ?').run(tok.active ? 0 : 1, req.params.id);
+    logWithAudit(req, 'تبديل رمز API', `${tok.name}: ${tok.active ? 'إيقاف' : 'تفعيل'}`);
+  }
+  res.redirect('/admin/api-tokens');
+});
+
+app.post('/admin/api-tokens/:id/delete', requireAuth, (req, res) => {
+  const tok = db.prepare('SELECT name FROM api_tokens WHERE id = ?').get(req.params.id);
+  if (tok) {
+    db.prepare('DELETE FROM api_tokens WHERE id = ?').run(req.params.id);
+    logWithAudit(req, 'حذف رمز API', `حذف: ${tok.name}`);
+  }
+  res.redirect('/admin/api-tokens');
 });
 
 app.listen(PORT, () => {

@@ -46,6 +46,26 @@
       </select>
     </label>
     <label class="flex items-center gap-3 cursor-pointer mt-4">
+      <label class="block text-sm font-bold mb-1">🌍 المنطقة الزمنية</label>
+      <select name="timezone" class="w-full bg-white border rounded-lg px-4 py-2 text-sm">
+        <option value="Asia/Riyadh" <%= (timezone || 'Asia/Riyadh') === 'Asia/Riyadh' ? 'selected' : '' %>>🇸🇦 الرياض (UTC+3)</option>
+        <option value="Asia/Dubai" <%= timezone === 'Asia/Dubai' ? 'selected' : '' %>>🇦🇪 دبي (UTC+4)</option>
+        <option value="Asia/Kuwait" <%= timezone === 'Asia/Kuwait' ? 'selected' : '' %>>🇰🇼 الكويت (UTC+3)</option>
+        <option value="Asia/Qatar" <%= timezone === 'Asia/Qatar' ? 'selected' : '' %>>🇶🇦 قطر (UTC+3)</option>
+        <option value="Asia/Bahrain" <%= timezone === 'Asia/Bahrain' ? 'selected' : '' %>>🇧🇭 البحرين (UTC+3)</option>
+        <option value="Asia/Baghdad" <%= timezone === 'Asia/Baghdad' ? 'selected' : '' %>>🇮🇶 بغداد (UTC+3)</option>
+        <option value="Africa/Cairo" <%= timezone === 'Africa/Cairo' ? 'selected' : '' %>>🇪🇬 القاهرة (UTC+2)</option>
+        <option value="Africa/Casablanca" <%= timezone === 'Africa/Casablanca' ? 'selected' : '' %>>🇲🇦 الدار البيضاء (UTC+1)</option>
+        <option value="Europe/London" <%= timezone === 'Europe/London' ? 'selected' : '' %>>🇬🇧 لندن (UTC+0/+1)</option>
+        <option value="Europe/Istanbul" <%= timezone === 'Europe/Istanbul' ? 'selected' : '' %>>🇹🇷 اسطنبول (UTC+3)</option>
+        <option value="Europe/Berlin" <%= timezone === 'Europe/Berlin' ? 'selected' : '' %>>🇩🇪 برلين (UTC+1/+2)</option>
+        <option value="Asia/Jakarta" <%= timezone === 'Asia/Jakarta' ? 'selected' : '' %>>🇮🇩 جاكرتا (UTC+7)</option>
+        <option value="Asia/Kuala_Lumpur" <%= timezone === 'Asia/Kuala_Lumpur' ? 'selected' : '' %>>🇲🇾 كوالالمبور (UTC+8)</option>
+        <option value="America/New_York" <%= timezone === 'America/New_York' ? 'selected' : '' %>>🇺🇸 نيويورك (UTC-5/-4)</option>
+        <option value="UTC" <%= timezone === 'UTC' ? 'selected' : '' %>>🌐 UTC</option>
+      </select>
+    </label>
+    <label class="flex items-center gap-3 cursor-pointer mt-4">
       <select name="comments_mode" class="w-full bg-white border rounded-lg px-4 py-2 text-sm">
         <option value="open" <%= commentsMode === 'open' ? 'selected' : '' %>>💬 السماح بالتعليقات مباشرة</option>
         <option value="approval" <%= commentsMode === 'approval' ? 'selected' : '' %>>⏳ السماح مع انتظار الموافقة</option>
@@ -178,13 +198,13 @@
         <label class="block text-sm font-bold mb-1">إعلان أعلى صفحة التأكيد</label>
         <textarea name="confirm_ad_top" rows="3" dir="ltr"
           class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500"
-          placeholder="ضع كود الإعلان هنا..."><%= typeof confirmAdTop !== 'undefined' ? confirmAdTop : '' %></textarea>
+          placeholder="ضع كود الإعلان هنا..."><%= confirmAdTop || '' %></textarea>
       </div>
       <div>
         <label class="block text-sm font-bold mb-1">إعلان أسفل صفحة التأكيد</label>
         <textarea name="confirm_ad_bottom" rows="3" dir="ltr"
           class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500"
-          placeholder="ضع كود الإعلان هنا..."><%= typeof confirmAdBottom !== 'undefined' ? confirmAdBottom : '' %></textarea>
+          placeholder="ضع كود الإعلان هنا..."><%= confirmAdBottom || '' %></textarea>
       </div>
     </div>
   </div>
@@ -201,24 +221,6 @@
     </div>
   </div>
 
-  <!-- Confirmation Page Ads -->
-  <div class="bg-white rounded-xl p-5 shadow-sm border">
-    <h3 class="font-bold mb-4">🎉 إعلانات صفحة تأكيد الإرسال</h3>
-    <div class="space-y-4">
-      <div>
-        <label class="block text-sm font-bold mb-1">إعلان أعلى صفحة التأكيد</label>
-        <textarea name="confirm_ad_top" rows="3" dir="ltr"
-          class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500"
-          placeholder="ضع كود الإعلان هنا..."><%= confirmAdTop || '' %></textarea>
-      </div>
-      <div>
-        <label class="block text-sm font-bold mb-1">إعلان أسفل صفحة التأكيد</label>
-        <textarea name="confirm_ad_bottom" rows="3" dir="ltr"
-          class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500"
-          placeholder="ضع كود الإعلان هنا..."><%= confirmAdBottom || '' %></textarea>
-      </div>
-    </div>
-  </div>
 
   <!-- Email Notifications -->
   <div class="bg-white rounded-xl p-5 shadow-sm border">
