@@ -2101,17 +2101,13 @@ app.post('/set-theme', (req, res) => {
   }
 });
 
-app.use((req, res) => {
-  const popular = db.prepare('SELECT * FROM stories WHERE approved = 1 ORDER BY views DESC LIMIT 5').all();
-  res.status(404).render('404', { title: 'الصفحة غير موجودة', popular });
-});
-
 // ============ API Token Admin Routes ============
 app.get('/admin/api-tokens', requireAuth, (req, res) => {
   const tokens = db.prepare('SELECT id, admin_username, token, name, active, last_used_at, created_at FROM api_tokens ORDER BY created_at DESC').all();
   res.render('admin/api-tokens', {
     layout: 'admin/layout',
     tokens,
+    newToken: null,
     title: 'رموز API - أول مرّة'
   });
 });
@@ -2146,6 +2142,12 @@ app.post('/admin/api-tokens/:id/delete', requireAuth, (req, res) => {
     logWithAudit(req, 'حذف رمز API', `حذف: ${tok.name}`);
   }
   res.redirect('/admin/api-tokens');
+});
+
+// 404 catch-all (must be last)
+app.use((req, res) => {
+  const popular = db.prepare('SELECT * FROM stories WHERE approved = 1 ORDER BY views DESC LIMIT 5').all();
+  res.status(404).render('404', { title: 'الصفحة غير موجودة', popular });
 });
 
 app.listen(PORT, () => {
