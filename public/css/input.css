@@ -2,17 +2,18 @@
 
 /* Masonry layout via CSS columns — browser handles layout, cards never reorder */
 #storiesGrid {
-  columns: 2;
-  column-gap: 0.75rem;
+  column-count: 2;
+  column-gap: 0.5rem;
 }
 #storiesGrid > .story-card {
   break-inside: avoid;
   display: block;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
+  width: 100%;
 }
-@media (min-width: 640px) { #storiesGrid { columns: 3; } }
-@media (min-width: 1024px) { #storiesGrid { columns: 4; } }
-@media (min-width: 1280px) { #storiesGrid { columns: 5; } }
+@media (min-width: 640px) { #storiesGrid { column-count: 3; column-gap: 0.75rem; } }
+@media (min-width: 1024px) { #storiesGrid { column-count: 4; } }
+@media (min-width: 1280px) { #storiesGrid { column-count: 5; } }
 
 /* Infinite scroll sentinel */
 #infiniteSentinel { height: 1px; }
@@ -44,12 +45,10 @@ button.react-btn.react-active.react-active-motivated { background: rgba(250, 204
 
 @keyframes fab-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6);
-    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
   }
   50% {
-    box-shadow: 0 0 20px 8px rgba(220, 38, 38, 0.3);
-    transform: scale(1.15);
+    box-shadow: 0 0 0 12px rgba(220, 38, 38, 0);
   }
 }
 
@@ -91,11 +90,9 @@ button.react-btn.react-active.react-active-motivated { background: rgba(250, 204
 @keyframes fab-pulse {
   0%, 100% {
     box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
-    transform: scale(1);
   }
   50% {
     box-shadow: 0 0 0 12px rgba(220, 38, 38, 0);
-    transform: scale(1.05);
   }
 }
 
