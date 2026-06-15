@@ -1,13 +1,46 @@
 @import "tailwindcss";
 
-/* Masonry layout */
-#storiesGrid { display: flex; gap: 0.75rem; width: 100%; }
-.masonry-col { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
-.masonry-col:nth-child(n+3) { display: none; }
-@media (min-width: 640px) { .masonry-col:nth-child(3) { display: flex; } }
-@media (min-width: 1024px) { .masonry-col:nth-child(4) { display: flex; } }
-@media (min-width: 1280px) { .masonry-col:nth-child(5) { display: flex; } }
-.masonry-col > a { break-inside: avoid; }
+/* Masonry layout via CSS columns — browser handles layout, cards never reorder */
+#storiesGrid {
+  columns: 2;
+  column-gap: 0.75rem;
+}
+#storiesGrid > .story-card {
+  break-inside: avoid;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+@media (min-width: 640px) { #storiesGrid { columns: 3; } }
+@media (min-width: 1024px) { #storiesGrid { columns: 4; } }
+@media (min-width: 1280px) { #storiesGrid { columns: 5; } }
+
+/* Infinite scroll sentinel */
+#infiniteSentinel { height: 1px; }
+
+/* Reaction button states */
+.react-btn { transition: all 0.2s ease; }
+.react-btn:hover { transform: scale(1.1); }
+.react-btn .react-emoji { filter: grayscale(0.5); opacity: 0.6; transition: all 0.2s ease; }
+.react-btn .react-count { color: var(--color-gray-500); transition: color 0.2s ease; }
+
+/* Active states — each type gets its own color */
+.react-btn.react-active .react-emoji { filter: grayscale(0); opacity: 1; transform: scale(1.15); }
+.react-btn.react-active .react-count { font-weight: 700; }
+
+.react-active-relatable .react-emoji { filter: grayscale(0); opacity: 1; }
+.react-active-relatable .react-count { color: #4ade80; } /* green-400 */
+
+.react-active-sympathy .react-emoji { filter: grayscale(0); opacity: 1; }
+.react-active-sympathy .react-count { color: #f87171; } /* red-400 */
+
+.react-active-motivated .react-emoji { filter: grayscale(0); opacity: 1; }
+.react-active-motivated .react-count { color: #facc15; } /* yellow-400 */
+
+/* Story page buttons — larger, add bg tint when active */
+button.react-btn.react-active { border-color: color-mix(in srgb, var(--primary) 30%, transparent); }
+button.react-btn.react-active.react-active-relatable { background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.3); }
+button.react-btn.react-active.react-active-sympathy { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.3); }
+button.react-btn.react-active.react-active-motivated { background: rgba(250, 204, 21, 0.08); border-color: rgba(250, 204, 21, 0.3); }
 
 @keyframes fab-pulse {
   0%, 100% {

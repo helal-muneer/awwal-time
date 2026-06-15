@@ -114,10 +114,6 @@
     }
     .floating-cta.hidden { transform: translateX(-50%) translateY(100px); opacity: 0; pointer-events: none; }
 
-    .react-btn { transition: all 0.2s ease; }
-    .react-btn:hover { transform: scale(1.15); }
-    .react-btn.active { transform: scale(1.2); }
-
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
@@ -299,6 +295,15 @@
     </div>
   </nav>
 
+  <!-- Floating Submit Button (all pages, responsive) -->
+  <a href="/submit" id="fabBtn" class="fixed bottom-5 right-5 z-40 bg-brand-600 hover:bg-brand-700 rounded-full shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2 transition-all hover:scale-105 fab-pulse"
+     style="color:#fff !important; padding: 0.75rem 1.25rem;"
+     onclick="if(typeof openSubmitModal==='function'){event.preventDefault();openSubmitModal();}"
+     title="شارك تجربتك">
+    <span class="text-xl">✍️</span>
+    <span class="text-sm font-bold">شارك تجربتك</span>
+  </a>
+
   <!-- Welcome Tour Tooltip -->
   <div id="tourTooltip" class="hidden fixed z-[10000] bg-dark-800 border border-dark-700 rounded-2xl p-5 shadow-2xl max-w-xs" style="transition:all 0.3s ease">
     <div class="flex items-center justify-between mb-2">
@@ -373,30 +378,6 @@
     }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
     document.querySelectorAll('.fade-up').forEach(el => window._fadeObserver.observe(el));
 
-    // Reactions
-    document.querySelectorAll('.react-btn').forEach(btn => {
-      btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const storyId = this.dataset.story;
-        const type = this.dataset.type;
-        const countEl = this.querySelector('.react-count');
-        if (this.classList.contains('active')) {
-          this.classList.remove('active');
-          this.style.opacity = '0.5';
-          countEl.textContent = parseInt(countEl.textContent) - 1;
-        } else {
-          this.classList.add('active');
-          this.style.opacity = '1';
-          countEl.textContent = parseInt(countEl.textContent) + 1;
-          spawnConfetti(e.clientX, e.clientY);
-          fetch(`/story/${storyId}/react`, {
-            method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({type})
-          }).catch(() => {});
-        }
-      });
-    });
     // Reading progress bar
     window.addEventListener('scroll', () => {
       const h = document.documentElement;

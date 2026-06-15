@@ -6,3 +6,4 @@ data/*.db-shm
 data/
 node_modules/
 .env
+awwal.db

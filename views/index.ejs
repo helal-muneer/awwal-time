@@ -70,13 +70,6 @@
 </div>
 <% } else { %>
 <div id="storiesGrid">
-  <div class="masonry-col"></div>
-  <div class="masonry-col"></div>
-  <div class="masonry-col"></div>
-  <div class="masonry-col"></div>
-  <div class="masonry-col"></div>
-</div>
-<div id="storiesBuffer" style="display:none">
 <% stories.forEach(function(s, idx) { %>
   <%
     var doneItems = (s.done_regrets || '').split('|||').filter(Boolean);
@@ -114,9 +107,15 @@
 
     <!-- Reactions bar -->
     <div class="flex items-center justify-around mt-4 pt-3 border-t border-dark-700/30">
-      <span class="text-xs text-gray-400 flex items-center gap-1 cursor-pointer hover:text-gray-200 transition" onclick="event.preventDefault();event.stopPropagation();toggleCardReact(this,'<%= s.id %>','relatable')">🫂 <span class="text-gray-500"><%= s.reactions && s.reactions.relatable || 0 %></span></span>
-      <span class="card-heart-btn text-xs text-gray-400 flex items-center gap-1 cursor-pointer hover:text-red-400 transition" data-sid="<%= s.id %>" onclick="event.preventDefault();event.stopPropagation();toggleCardReact(this,'<%= s.id %>','sympathy')">❤️ <span class="text-gray-500"><%= s.reactions && s.reactions.sympathy || 0 %></span></span>
-      <span class="text-xs text-gray-400 flex items-center gap-1 cursor-pointer hover:text-gray-200 transition" onclick="event.preventDefault();event.stopPropagation();toggleCardReact(this,'<%= s.id %>','motivated')">💪 <span class="text-gray-500"><%= s.reactions && s.reactions.motivated || 0 %></span></span>
+      <span class="react-btn text-xs flex items-center gap-1 cursor-pointer transition select-none" data-sid="<%= s.id %>" data-type="relatable" onclick="event.preventDefault();event.stopPropagation();toggleReact(this)">
+        <span class="react-emoji">🫂</span> <span class="react-count text-gray-500"><%= s.reactions && s.reactions.relatable || 0 %></span>
+      </span>
+      <span class="react-btn text-xs flex items-center gap-1 cursor-pointer transition select-none" data-sid="<%= s.id %>" data-type="sympathy" onclick="event.preventDefault();event.stopPropagation();toggleReact(this)">
+        <span class="react-emoji">❤️</span> <span class="react-count text-gray-500"><%= s.reactions && s.reactions.sympathy || 0 %></span>
+      </span>
+      <span class="react-btn text-xs flex items-center gap-1 cursor-pointer transition select-none" data-sid="<%= s.id %>" data-type="motivated" onclick="event.preventDefault();event.stopPropagation();toggleReact(this)">
+        <span class="react-emoji">💪</span> <span class="react-count text-gray-500"><%= s.reactions && s.reactions.motivated || 0 %></span>
+      </span>
       <span onclick="event.preventDefault();event.stopPropagation();window.location.href='/story/<%= s.id %>#comments'" class="text-xs text-gray-400 flex items-center gap-1 hover:text-gray-200 transition cursor-pointer">💬 <span class="text-gray-500"><%= s.comment_count || 0 %></span></span>
     </div>
     <!-- Author & date -->
@@ -128,24 +127,28 @@
   <% }); %>
 </div>
 <% } %>
-</div>
 
-<!-- Load More -->
-<% if (hasMore) { %>
-<div class="text-center mt-8 fade-up" id="loadMoreContainer">
-  <button id="loadMoreBtn" onclick="loadMorePosts()"
-    data-page="<%= currentPage + 1 %>"
-    data-sort="<%= sort %>"
-    data-category="<%= category %>"
-    data-search="<%= search %>"
-    class="bg-dark-800/60 hover:bg-dark-700 border border-dark-700/40 px-8 py-3 rounded-full font-bold transition-all inline-flex items-center gap-2">
-    تحميل المزيد ⬇️
-  </button>
+<!-- Infinite scroll sentinel + state -->
+<div id="infiniteSentinel"></div>
+<div id="loadMoreContainer" class="text-center mt-6">
+  <% if (hasMore) { %>
+  <div id="loadingIndicator" class="hidden py-4">
+    <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500"></div>
+  </div>
+  <% } else { %>
+  <p class="text-gray-500 text-sm">✨ لا مزيد من المشاركات</p>
+  <% } %>
 </div>
-<% } %>
-
-<!-- FAB -->
-<button onclick="openSubmitModal()" id="fabBtn" class="fixed bottom-6 right-6 z-40 bg-brand-600 hover:bg-brand-700 rounded-full shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2 px-5 py-3 transition-all hover:scale-105 fab-pulse" style="color:#fff !important" title="شارك تجربتك"><span class="text-lg">✍️</span> <span class="text-sm font-bold">شارك تجربتك</span></button>
+<script>
+window._awwal_pageState = {
+  nextPage: <%= hasMore ? currentPage + 1 : null %>,
+  sort: '<%= sort %>',
+  category: '<%= category %>',
+  search: '<%= search %>',
+  loading: false,
+  done: <%= !hasMore %>
+};
+</script>
 
 <!-- Submit Modal -->
 <div id="submitModal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center">
@@ -304,160 +307,197 @@ document.querySelectorAll('input[name="category"]').forEach(r => {
 });
 updateCategoryStyles();
 
-// ===== Masonry Distribution =====
-function distributeCards() {
-  var cols = document.querySelectorAll('#storiesGrid .masonry-col');
-  var buffer = document.getElementById('storiesBuffer');
-  // Move all cards back to buffer first
-  cols.forEach(function(c) {
-    while (c.firstChild) buffer.appendChild(c.firstChild);
-  });
-  // Find visible columns
-  var visibleCols = [];
-  cols.forEach(function(c) {
-    if (getComputedStyle(c).display !== 'none') visibleCols.push(c);
-  });
-  if (visibleCols.length === 0) visibleCols = Array.from(cols).slice(0, 2);
-  // Distribute to shortest column each time
-  var allCards = buffer.querySelectorAll('a');
-  allCards.forEach(function(card) {
-    var shortest = visibleCols[0];
-    for (var i = 1; i < visibleCols.length; i++) {
-      if (visibleCols[i].children.length < shortest.children.length) {
-        shortest = visibleCols[i];
-      }
-    }
-    shortest.appendChild(card);
-  });
-}
-// Distribute on page load
-distributeCards();
-// Redistribute on resize
-var _resizeTimer;
-window.addEventListener('resize', function() {
-  clearTimeout(_resizeTimer);
-  _resizeTimer = setTimeout(distributeCards, 200);
-});
-
-// ===== Heart Toggle (Card Reactions) =====
-var _awwal_ur = {};
-try { _awwal_ur = JSON.parse(localStorage.getItem('awwal_react_v2') || '{}'); } catch(e) {}
-function _saveUR() { localStorage.setItem('awwal_react_v2', JSON.stringify(_awwal_ur)); }
-function _hasReacted(sid, t) { return (_awwal_ur[sid] || []).indexOf(t) !== -1; }
-
-function toggleCardReact(el, sid, type) {
-  var countEl = el.querySelector('span');
-  var count = parseInt(countEl.textContent) || 0;
-  var had = _hasReacted(sid, type);
-  
-  // Prevent double-click
-  if (el.dataset.busy === '1') return;
-  el.dataset.busy = '1';
-  
-  var action = had ? 'remove' : 'add';
-
-  // Optimistic update
-  countEl.textContent = had ? count - 1 : count + 1;
-  el.classList.toggle('text-brand-400', !had);
-  if (!_awwal_ur[sid]) _awwal_ur[sid] = [];
-  if (had) { _awwal_ur[sid] = _awwal_ur[sid].filter(function(x){return x!==type}); }
-  else { if (_awwal_ur[sid].indexOf(type)===-1) _awwal_ur[sid].push(type); }
-  _saveUR();
-
-  fetch('/react', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({story_id:sid, type:type, action:action})})
-  .then(function(r){return r.json()})
-  .then(function(d){ 
-    el.dataset.busy = '0';
-    if(!d.ok){ countEl.textContent=count; el.classList.toggle('text-brand-400',had); if(had){_awwal_ur[sid].push(type)}else{_awwal_ur[sid]=_awwal_ur[sid].filter(function(x){return x!==type})} _saveUR(); } 
-  })
-  .catch(function(){ 
-    el.dataset.busy = '0';
-    countEl.textContent=count; el.classList.toggle('text-brand-400',had); if(had){_awwal_ur[sid].push(type)}else{_awwal_ur[sid]=_awwal_ur[sid].filter(function(x){return x!==type})} _saveUR(); 
-  });
-}
-
-// Init mobile heart buttons from localStorage
-document.querySelectorAll('.card-heart-btn').forEach(function(el) {
-  var sid = el.dataset.sid;
-  if (_hasReacted(sid, 'sympathy')) {
-    el.classList.add('text-brand-400');
-  }
-});
-
-// ===== AJAX Load More =====
+// ===== Infinite Scroll =====
 function loadMorePosts() {
-  var btn = document.getElementById('loadMoreBtn');
-  if (!btn) return;
-  var page = btn.dataset.page;
-  var sort = btn.dataset.sort;
-  var category = btn.dataset.category;
-  var search = btn.dataset.search;
+  var state = window._awwal_pageState;
+  if (!state || state.loading || state.done || !state.nextPage) return;
 
-  btn.textContent = '⏳ جاري التحميل...';
-  btn.disabled = true;
+  state.loading = true;
+  var indicator = document.getElementById('loadingIndicator');
+  if (indicator) indicator.classList.remove('hidden');
 
-  var url = '/?page=' + page + '&sort=' + sort + '&category=' + encodeURIComponent(category) + '&q=' + encodeURIComponent(search) + '&ajax=1';
+  var url = '/?page=' + state.nextPage + '&sort=' + state.sort + '&category=' + encodeURIComponent(state.category) + '&q=' + encodeURIComponent(state.search) + '&ajax=1';
 
   fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
     .then(function(r) { return r.text(); })
     .then(function(html) {
       var parser = new DOMParser();
       var doc = parser.parseFromString(html, 'text/html');
-      // Get cards from buffer in the fetched page
-      var newCards = doc.querySelectorAll('#storiesBuffer > a');
-      // If no buffer (shouldn't happen), fallback to grid cards
-      if (newCards.length === 0) newCards = doc.querySelectorAll('#storiesGrid > a');
-      var buffer = document.getElementById('storiesBuffer');
+      // Extract cards from the fetched page's grid
+      var newCards = doc.querySelectorAll('#storiesGrid > .story-card');
+      var grid = document.getElementById('storiesGrid');
 
-      // Add new cards to buffer
       if (newCards.length === 0) {
-        // No more posts available
+        // No more posts
+        state.done = true;
+        state.loading = false;
         var container = document.getElementById('loadMoreContainer');
         if (container) container.innerHTML = '<p class="text-gray-500 text-sm">✨ لا مزيد من المشاركات</p>';
         return;
       }
+
+      // Append new cards directly to the grid — CSS columns handles layout
       newCards.forEach(function(card) {
-        buffer.appendChild(card);
+        grid.appendChild(card);
       });
 
-      // Redistribute all cards
-      distributeCards();
-
-      // Observe new cards with IntersectionObserver for fade-up animation
+      // Observe new cards for fade-up animation
       newCards.forEach(function(card) {
         if (window._fadeObserver) {
           window._fadeObserver.observe(card);
         } else {
-          // Fallback: make visible immediately if observer not available
           card.classList.add('visible');
         }
       });
 
-      // Check if there's a next page
-      var newLoadMore = doc.getElementById('loadMoreBtn');
-      if (newLoadMore) {
-        btn.dataset.page = newLoadMore.dataset.page;
-        btn.textContent = 'تحميل المزيد ⬇️';
-        btn.disabled = false;
+      // Re-init reaction buttons for new cards
+      initReactButtons(grid);
+
+      // Update pagination state from the fetched page
+      var fetchedState = null;
+      try {
+        var stateScript = doc.querySelector('script:not([src])');
+        if (stateScript) {
+          var match = stateScript.textContent.match(/window\._awwal_pageState\s*=\s*({[\s\S]*?});/);
+          if (match) fetchedState = JSON.parse(match[1]);
+        }
+      } catch(e) {}
+
+      if (fetchedState && !fetchedState.done) {
+        state.nextPage = fetchedState.nextPage;
+        state.loading = false;
       } else {
-        var container = document.getElementById('loadMoreContainer');
-        if (container) container.innerHTML = '<p class="text-gray-500 text-sm">✨ لا مزيد من المشاركات</p>';
+        // Check if there's a sentinel + state on fetched page
+        var fetchedSentinel = doc.getElementById('infiniteSentinel');
+        if (fetchedSentinel) {
+          // Try to parse the page state
+          var hasMoreScript = doc.querySelector('#loadMoreContainer');
+          if (hasMoreScript && hasMoreScript.textContent.indexOf('لا مزيد') !== -1) {
+            state.done = true;
+            state.nextPage = null;
+            var container = document.getElementById('loadMoreContainer');
+            if (container) container.innerHTML = '<p class="text-gray-500 text-sm">✨ لا مزيد من المشاركات</p>';
+          } else {
+            state.nextPage = state.nextPage + 1;
+            state.loading = false;
+          }
+        } else {
+          state.done = true;
+          state.nextPage = null;
+          var container = document.getElementById('loadMoreContainer');
+          if (container) container.innerHTML = '<p class="text-gray-500 text-sm">✨ لا مزيد من المشاركات</p>';
+        }
       }
 
-      // Re-init heart buttons for new cards
-      document.querySelectorAll('.card-heart-btn').forEach(function(el) {
-        var sid = el.dataset.sid;
-        if (_hasReacted(sid, 'sympathy')) {
-          el.classList.add('text-brand-400');
-        }
-      });
+      if (indicator) indicator.classList.add('hidden');
     })
     .catch(function() {
-      btn.textContent = 'تحميل المزيد ⬇️';
-      btn.disabled = false;
+      state.loading = false;
+      if (indicator) indicator.classList.add('hidden');
       showToast('خطأ في التحميل', 'error');
     });
 }
+
+// IntersectionObserver for infinite scroll
+var sentinel = document.getElementById('infiniteSentinel');
+if (sentinel && window._awwal_pageState && !window._awwal_pageState.done) {
+  var scrollObserver = new IntersectionObserver(function(entries) {
+    if (entries[0].isIntersecting) {
+      loadMorePosts();
+    }
+  }, { rootMargin: '300px' });
+  scrollObserver.observe(sentinel);
+}
+
+// ===== Unified Reaction System =====
+var REACT_STORE = 'awwal_reactions';
+var _reactState = {};
+try { _reactState = JSON.parse(localStorage.getItem(REACT_STORE) || '{}'); } catch(e) {}
+function _saveReacts() { localStorage.setItem(REACT_STORE, JSON.stringify(_reactState)); }
+function _hasReacted(sid, t) { return ((_reactState[sid] || []).indexOf(t) !== -1); }
+
+var REACT_STYLES = {
+  relatable: { active: 'react-active-relatable' },
+  sympathy:  { active: 'react-active-sympathy' },
+  motivated: { active: 'react-active-motivated' }
+};
+
+function _applyReactActive(el, type, on) {
+  var cls = REACT_STYLES[type];
+  if (!cls) return;
+  if (on) {
+    el.classList.add('react-active', cls.active);
+  } else {
+    el.classList.remove('react-active', cls.active);
+  }
+}
+
+function toggleReact(el) {
+  var sid = el.dataset.sid;
+  var type = el.dataset.type;
+  if (!sid || !type) return;
+  if (el.dataset.busy === '1') return;
+  el.dataset.busy = '1';
+
+  var countEl = el.querySelector('.react-count');
+  var oldCount = parseInt(countEl.textContent) || 0;
+  var had = _hasReacted(sid, type);
+  var action = had ? 'remove' : 'add';
+
+  // Optimistic update
+  countEl.textContent = had ? Math.max(0, oldCount - 1) : oldCount + 1;
+  _applyReactActive(el, type, !had);
+
+  // Update localStorage
+  if (!_reactState[sid]) _reactState[sid] = [];
+  if (had) {
+    _reactState[sid] = _reactState[sid].filter(function(x) { return x !== type; });
+  } else {
+    if (_reactState[sid].indexOf(type) === -1) _reactState[sid].push(type);
+  }
+  _saveReacts();
+
+  fetch('/react', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ story_id: sid, type: type, action: action })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    el.dataset.busy = '0';
+    if (!d.ok) {
+      // Revert
+      countEl.textContent = oldCount;
+      _applyReactActive(el, type, had);
+      if (had) { if (_reactState[sid].indexOf(type) === -1) _reactState[sid].push(type); }
+      else { _reactState[sid] = _reactState[sid].filter(function(x) { return x !== type; }); }
+      _saveReacts();
+    } else if (d.counts) {
+      // Server-authoritative count
+      countEl.textContent = d.counts[type] || 0;
+    }
+  })
+  .catch(function() {
+    el.dataset.busy = '0';
+    countEl.textContent = oldCount;
+    _applyReactActive(el, type, had);
+    if (had) { if (_reactState[sid].indexOf(type) === -1) _reactState[sid].push(type); }
+    else { _reactState[sid] = _reactState[sid].filter(function(x) { return x !== type; }); }
+    _saveReacts();
+  });
+}
+
+// Init all reaction buttons from localStorage
+function initReactButtons(scope) {
+  (scope || document).querySelectorAll('.react-btn').forEach(function(el) {
+    var sid = el.dataset.sid || el.dataset.story;
+    var type = el.dataset.type;
+    if (sid && type) {
+      _applyReactActive(el, type, _hasReacted(sid, type));
+    }
+  });
+}
+initReactButtons();
 
 // FAB pulse starts via CSS class, stops when modal opens
 </script>

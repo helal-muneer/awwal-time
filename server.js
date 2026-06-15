@@ -497,31 +497,41 @@ app.get('/story/:id', (req, res) => {
   });
 });
 
-// React to story (from cards - with toggle)
-app.post('/react', (req, res) => {
+// React to story (unified endpoint for both cards and story page)
+app.post('/react', userRateLimit(30, 60000), (req, res) => {
   const { story_id, type, action } = req.body;
-  if (!story_id || !['relatable', 'sympathy', 'motivated'].includes(type)) return res.json({ok:false,error:'invalid'});
-  if (action === 'remove') {
-    db.prepare('UPDATE reactions SET count = MAX(0, count - 1) WHERE story_id = ? AND type = ? AND count > 0').run(story_id, type);
-  } else {
-    db.prepare('INSERT INTO reactions (story_id, type, count) VALUES (?, ?, 1) ON CONFLICT(story_id, type) DO UPDATE SET count = count + 1').run(story_id, type);
+  const storyId = parseInt(story_id || req.params.id);
+  if (!storyId || !['relatable', 'sympathy', 'motivated'].includes(type)) {
+    return res.json({ ok: false, error: 'invalid' });
   }
-  const row = db.prepare('SELECT count FROM reactions WHERE story_id = ? AND type = ?').get(story_id, type);
-  res.json({ok:true, count: row ? row.count : 0});
-});
-
-// React to story (from story page - with toggle)
-app.post('/story/:id/react', (req, res) => {
-  const { type, action } = req.body;
-  const storyId = req.params.id;
-  if (!['relatable', 'sympathy', 'motivated'].includes(type)) return res.json({ok:false,error:'invalid'});
   if (action === 'remove') {
     db.prepare('UPDATE reactions SET count = MAX(0, count - 1) WHERE story_id = ? AND type = ? AND count > 0').run(storyId, type);
   } else {
     db.prepare('INSERT INTO reactions (story_id, type, count) VALUES (?, ?, 1) ON CONFLICT(story_id, type) DO UPDATE SET count = count + 1').run(storyId, type);
   }
-  const row = db.prepare('SELECT count FROM reactions WHERE story_id = ? AND type = ?').get(storyId, type);
-  res.json({ok:true, count: row ? row.count : 0});
+  // Return ALL reaction counts for this story so client stays in sync
+  const rows = db.prepare('SELECT type, count FROM reactions WHERE story_id = ?').all(storyId);
+  const counts = {};
+  rows.forEach(r => { counts[r.type] = r.count; });
+  res.json({ ok: true, count: counts[type] || 0, counts });
+});
+
+// Keep old story route as alias (redirects to /react logic)
+app.post('/story/:id/react', userRateLimit(30, 60000), (req, res) => {
+  const { type, action } = req.body;
+  const storyId = req.params.id;
+  if (!storyId || !['relatable', 'sympathy', 'motivated'].includes(type)) {
+    return res.json({ ok: false, error: 'invalid' });
+  }
+  if (action === 'remove') {
+    db.prepare('UPDATE reactions SET count = MAX(0, count - 1) WHERE story_id = ? AND type = ? AND count > 0').run(storyId, type);
+  } else {
+    db.prepare('INSERT INTO reactions (story_id, type, count) VALUES (?, ?, 1) ON CONFLICT(story_id, type) DO UPDATE SET count = count + 1').run(storyId, type);
+  }
+  const rows = db.prepare('SELECT type, count FROM reactions WHERE story_id = ?').all(storyId);
+  const counts = {};
+  rows.forEach(r => { counts[r.type] = r.count; });
+  res.json({ ok: true, count: counts[type] || 0, counts });
 });
 
 // Submit page
