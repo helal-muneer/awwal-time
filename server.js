@@ -233,6 +233,7 @@ settings.run('confirm_ad_bottom', '');
 settings.run('site_name', 'أول مرّة');
 settings.run('site_description', '');
 settings.run('timezone', 'Asia/Riyadh');
+settings.run('success_redirect_delay', '6');
 
 // Theme definitions
 const THEMES = {
@@ -629,7 +630,8 @@ app.post('/submit', userRateLimit(5, 300000), (req, res, next) => {
   res.render('submit-success', {
     title: 'تم الإرسال بنجاح - أول مرّة',
     confirmAdTop: getSetting('confirm_ad_top'),
-    confirmAdBottom: getSetting('confirm_ad_bottom')
+    confirmAdBottom: getSetting('confirm_ad_bottom'),
+    redirectDelay: parseInt(getSetting('success_redirect_delay')) || 6
   });
 });
 
@@ -638,7 +640,8 @@ app.get('/submit-success', (req, res) => {
   res.render('submit-success', {
     title: 'تم الإرسال بنجاح - أول مرّة',
     confirmAdTop: getSetting('confirm_ad_top'),
-    confirmAdBottom: getSetting('confirm_ad_bottom')
+    confirmAdBottom: getSetting('confirm_ad_bottom'),
+    redirectDelay: parseInt(getSetting('success_redirect_delay')) || 6
   });
 });
 
@@ -801,6 +804,7 @@ app.get('/admin/settings', requireSuper, (req, res) => {
     confirmAdTop: getSetting('confirm_ad_top'),
     confirmAdBottom: getSetting('confirm_ad_bottom'),
     timezone: getSetting('timezone') || 'Asia/Riyadh',
+    successRedirectDelay: getSetting('success_redirect_delay') || '6',
     title: 'الإعدادات - أول مرّة'
   });
 });
@@ -847,6 +851,7 @@ app.post('/admin/settings', requireSuper, (req, res) => {
   // Confirmation page ad slots
   upsert.run('confirm_ad_top', req.body.confirm_ad_top || '');
   upsert.run('confirm_ad_bottom', req.body.confirm_ad_bottom || '');
+  upsert.run('success_redirect_delay', String(parseInt(req.body.success_redirect_delay) || 6));
   logWithAudit(req, 'تحديث الإعدادات', 'تم تحديث إعدادات الموقع');
   res.redirect('/admin/settings');
   } catch(err) {
