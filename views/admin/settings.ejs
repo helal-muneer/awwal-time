@@ -48,21 +48,22 @@
     <label class="flex items-center gap-3 cursor-pointer mt-4">
       <label class="block text-sm font-bold mb-1">🌍 المنطقة الزمنية</label>
       <select name="timezone" class="w-full bg-white border rounded-lg px-4 py-2 text-sm">
-        <option value="Asia/Riyadh" <%= (timezone || 'Asia/Riyadh') === 'Asia/Riyadh' ? 'selected' : '' %>>🇸🇦 الرياض (UTC+3)</option>
-        <option value="Asia/Dubai" <%= timezone === 'Asia/Dubai' ? 'selected' : '' %>>🇦🇪 دبي (UTC+4)</option>
-        <option value="Asia/Kuwait" <%= timezone === 'Asia/Kuwait' ? 'selected' : '' %>>🇰🇼 الكويت (UTC+3)</option>
-        <option value="Asia/Qatar" <%= timezone === 'Asia/Qatar' ? 'selected' : '' %>>🇶🇦 قطر (UTC+3)</option>
-        <option value="Asia/Bahrain" <%= timezone === 'Asia/Bahrain' ? 'selected' : '' %>>🇧🇭 البحرين (UTC+3)</option>
-        <option value="Asia/Baghdad" <%= timezone === 'Asia/Baghdad' ? 'selected' : '' %>>🇮🇶 بغداد (UTC+3)</option>
-        <option value="Africa/Cairo" <%= timezone === 'Africa/Cairo' ? 'selected' : '' %>>🇪🇬 القاهرة (UTC+2)</option>
-        <option value="Africa/Casablanca" <%= timezone === 'Africa/Casablanca' ? 'selected' : '' %>>🇲🇦 الدار البيضاء (UTC+1)</option>
-        <option value="Europe/London" <%= timezone === 'Europe/London' ? 'selected' : '' %>>🇬🇧 لندن (UTC+0/+1)</option>
-        <option value="Europe/Istanbul" <%= timezone === 'Europe/Istanbul' ? 'selected' : '' %>>🇹🇷 اسطنبول (UTC+3)</option>
-        <option value="Europe/Berlin" <%= timezone === 'Europe/Berlin' ? 'selected' : '' %>>🇩🇪 برلين (UTC+1/+2)</option>
-        <option value="Asia/Jakarta" <%= timezone === 'Asia/Jakarta' ? 'selected' : '' %>>🇮🇩 جاكرتا (UTC+7)</option>
-        <option value="Asia/Kuala_Lumpur" <%= timezone === 'Asia/Kuala_Lumpur' ? 'selected' : '' %>>🇲🇾 كوالالمبور (UTC+8)</option>
-        <option value="America/New_York" <%= timezone === 'America/New_York' ? 'selected' : '' %>>🇺🇸 نيويورك (UTC-5/-4)</option>
-        <option value="UTC" <%= timezone === 'UTC' ? 'selected' : '' %>>🌐 UTC</option>
+        <% var tz = typeof timezone !== 'undefined' ? timezone : 'Asia/Riyadh'; %>
+        <option value="Asia/Riyadh" <%= tz === 'Asia/Riyadh' ? 'selected' : '' %>>🇸🇦 الرياض (UTC+3)</option>
+        <option value="Asia/Dubai" <%= tz === 'Asia/Dubai' ? 'selected' : '' %>>🇦🇪 دبي (UTC+4)</option>
+        <option value="Asia/Kuwait" <%= tz === 'Asia/Kuwait' ? 'selected' : '' %>>🇰🇼 الكويت (UTC+3)</option>
+        <option value="Asia/Qatar" <%= tz === 'Asia/Qatar' ? 'selected' : '' %>>🇶🇦 قطر (UTC+3)</option>
+        <option value="Asia/Bahrain" <%= tz === 'Asia/Bahrain' ? 'selected' : '' %>>🇧🇭 البحرين (UTC+3)</option>
+        <option value="Asia/Baghdad" <%= tz === 'Asia/Baghdad' ? 'selected' : '' %>>🇮🇶 بغداد (UTC+3)</option>
+        <option value="Africa/Cairo" <%= tz === 'Africa/Cairo' ? 'selected' : '' %>>🇪🇬 القاهرة (UTC+2)</option>
+        <option value="Africa/Casablanca" <%= tz === 'Africa/Casablanca' ? 'selected' : '' %>>🇲🇦 الدار البيضاء (UTC+1)</option>
+        <option value="Europe/London" <%= tz === 'Europe/London' ? 'selected' : '' %>>🇬🇧 لندن (UTC+0/+1)</option>
+        <option value="Europe/Istanbul" <%= tz === 'Europe/Istanbul' ? 'selected' : '' %>>🇹🇷 اسطنبول (UTC+3)</option>
+        <option value="Europe/Berlin" <%= tz === 'Europe/Berlin' ? 'selected' : '' %>>🇩🇪 برلين (UTC+1/+2)</option>
+        <option value="Asia/Jakarta" <%= tz === 'Asia/Jakarta' ? 'selected' : '' %>>🇮🇩 جاكرتا (UTC+7)</option>
+        <option value="Asia/Kuala_Lumpur" <%= tz === 'Asia/Kuala_Lumpur' ? 'selected' : '' %>>🇲🇾 كوالالمبور (UTC+8)</option>
+        <option value="America/New_York" <%= tz === 'America/New_York' ? 'selected' : '' %>>🇺🇸 نيويورك (UTC-5/-4)</option>
+        <option value="UTC" <%= tz === 'UTC' ? 'selected' : '' %>>🌐 UTC</option>
       </select>
     </label>
     <label class="flex items-center gap-3 cursor-pointer mt-4">
