@@ -84,7 +84,8 @@
     <div class="mt-4">
       <label class="block text-sm font-bold mb-1">⏱️ مدة الانتظار في صفحة تأكيد المشاركة</label>
       <div class="flex items-center gap-3">
-        <input type="number" name="success_redirect_delay" min="1" max="60" value="<%= successRedirectDelay %>" class="w-24 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+        <% var srd = typeof successRedirectDelay !== 'undefined' ? successRedirectDelay : '6'; %>
+        <input type="number" name="success_redirect_delay" min="1" max="60" value="<%= srd %>" class="w-24 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
         <span class="text-sm text-gray-500">ثانية</span>
       </div>
       <p class="text-xs text-gray-400 mt-1">عدد الثواني قبل تحويل المستخدم تلقائياً للصفحة الرئيسية بعد إرسال المشاركة</p>
